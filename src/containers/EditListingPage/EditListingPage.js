@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { compose } from 'redux';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
@@ -10,7 +10,6 @@ import {
   LISTING_PAGE_PARAM_TYPE_DRAFT,
   LISTING_PAGE_PARAM_TYPE_NEW,
   LISTING_PAGE_PARAM_TYPES,
-  LISTING_PAGE_PENDING_APPROVAL_VARIANT,
   NO_ACCESS_PAGE_POST_LISTINGS,
   NO_ACCESS_PAGE_USER_PENDING_APPROVAL,
   createSlug,
@@ -51,6 +50,7 @@ import {
   uploadFile,
   clearUploadedFiles,
   downloadFile,
+  resetNewListingState,
 } from './EditListingPage.duck';
 import EditListingWizard from './EditListingWizard/EditListingWizard';
 import css from './EditListingPage.module.css';
@@ -147,6 +147,18 @@ const pickRenderableImages = (
  */
 export const EditListingPageComponent = props => {
   const intl = useIntl();
+  const { onResetNewListingState } = props;
+
+  // JDM: when leaving the page (e.g. after a new ad is published and we redirect to the
+  // "submitted" page), forget that ad. Otherwise the next "Post a new listing" visit
+  // still sees it as just published and redirects straight back to the submitted page.
+  useEffect(() => {
+    return () => {
+      if (onResetNewListingState) {
+        onResetNewListingState();
+      }
+    };
+  }, [onResetNewListingState]);
   const {
     currentUser,
     createStripeAccountError,
@@ -227,13 +239,13 @@ export const EditListingPageComponent = props => {
     // redirect to listing page
     const listingSlug = currentListing ? createSlug(currentListing.attributes.title) : null;
 
+    // JDM: new ads wait for operator approval, show the "We'll take care of the rest" page.
     const redirectProps = isPendingApproval
       ? {
-          name: 'ListingPageVariant',
+          name: 'ListingSubmittedPage',
           params: {
             id: listingId.uuid,
             slug: listingSlug,
-            variant: LISTING_PAGE_PENDING_APPROVAL_VARIANT,
           },
         }
       : {
@@ -425,6 +437,7 @@ const mapDispatchToProps = dispatch => ({
   onUploadFile: (file, tempId) => dispatch(uploadFile(file, tempId)),
   onClearUploadedFiles: tempIds => dispatch(clearUploadedFiles(tempIds)),
   onDownloadFile: fileAttachmentId => dispatch(downloadFile(fileAttachmentId)),
+  onResetNewListingState: () => dispatch(resetNewListingState()),
 });
 
 // Note: it is important that the withRouter HOC is **outside** the

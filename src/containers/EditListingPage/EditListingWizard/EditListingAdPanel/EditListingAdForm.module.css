@@ -1,0 +1,255 @@
+@import '../../../../styles/customMediaQueries.css';
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  @media (--viewportMedium) {
+    gap: 32px;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.label {
+  /* Same as the template's field labels, so "Type of ad" and "Photos" match "Make" etc. */
+  display: block;
+  padding: 0;
+  margin: 0 0 8px 0;
+  font-weight: var(--fontWeightSemiBold);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--colorGrey700);
+}
+
+/* Ad type cards */
+.adTypeFieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.adTypeOptions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+.adTypeCard {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  margin: 0;
+  min-height: 72px;
+
+  background-color: var(--colorWhite);
+  border: 1.5px solid var(--colorGrey100);
+  border-radius: var(--borderRadiusMedium);
+  cursor: pointer;
+  transition: border-color var(--transitionStyleButton), box-shadow var(--transitionStyleButton);
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--colorGrey300);
+    }
+  }
+
+  @media (--viewportMedium) {
+    padding: 16px 20px;
+  }
+}
+
+.adTypeCardSelected {
+  border-color: var(--marketplaceColor);
+  box-shadow: 0 0 0 1px var(--marketplaceColor);
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--marketplaceColor);
+    }
+  }
+}
+
+/* Visually hidden, still focusable */
+.adTypeInput {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+
+.adTypeRadio {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 2px solid var(--colorGrey500);
+  border-radius: 50%;
+  background-color: var(--colorWhite);
+  transition: border-color var(--transitionStyleButton);
+}
+
+.adTypeCardSelected .adTypeRadio {
+  border: 6px solid var(--marketplaceColor);
+}
+
+.adTypeInput:focus-visible ~ .adTypeRadio {
+  outline: 2px solid var(--marketplaceColor);
+  outline-offset: 2px;
+}
+
+.adTypeText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adTypeName {
+  font-weight: var(--fontWeightSemiBold);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--colorGrey700);
+}
+
+.adTypeDescription {
+  font-size: 14px;
+  line-height: 1.429;
+  color: var(--colorGrey600);
+}
+
+.subcategory {
+  max-width: 100%;
+
+  @media (--viewportMedium) {
+    max-width: calc((100% - 32px) / 3);
+  }
+}
+
+/* 3-column rows (Make / Model / Year, etc.) */
+.row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+}
+
+/* Remove the bottom margins that template fields carry, the row gap handles spacing */
+.row > * {
+  margin: 0;
+}
+
+.field {
+  margin: 0;
+}
+
+.counter {
+  margin: 6px 0 0 0;
+  padding: 0;
+  text-align: right;
+  font-size: 13px;
+  line-height: 1.385;
+  color: var(--colorGrey600);
+  font-variant-numeric: tabular-nums;
+}
+
+.counterLimit {
+  color: var(--colorFail);
+}
+
+/* Photos */
+.photos {
+  display: flex;
+  flex-direction: column;
+}
+
+.photosHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+
+  & .label {
+    margin-bottom: 12px;
+  }
+}
+
+.photosCount {
+  font-size: 14px;
+  line-height: 1.429;
+  color: var(--colorGrey600);
+  font-variant-numeric: tabular-nums;
+}
+
+.dropzoneTitle {
+  font-weight: var(--fontWeightSemiBold);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--colorGrey700);
+}
+
+.dropzoneHint {
+  font-size: 14px;
+  line-height: 1.429;
+  color: var(--colorGrey600);
+}
+
+.photosTip {
+  margin: 12px 0 0 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.429;
+  color: var(--colorGrey600);
+}
+
+.error {
+  margin: 0;
+  color: var(--colorFail);
+}
+
+.submitSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding-bottom: 48px;
+
+  @media (--viewportMedium) {
+    margin-top: 16px;
+    padding-bottom: 80px;
+  }
+}
+
+.submitButton {
+  width: 100%;
+
+  @media (--viewportMedium) {
+    width: 240px;
+  }
+}
+
+.uploadingNote {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.429;
+  color: var(--colorGrey600);
+}

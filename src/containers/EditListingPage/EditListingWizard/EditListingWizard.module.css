@@ -102,3 +102,16 @@
     margin-bottom: 40px;
   }
 }
+
+/* Single-page ad form: no tab navigation, content centered */
+.singlePageContainer {
+  flex-grow: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--colorWhite);
+}
+
+.navHidden {
+  display: none;
+}

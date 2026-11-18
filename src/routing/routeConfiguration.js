@@ -20,6 +20,7 @@ const EditListingPage = loadable(() => import(/* webpackChunkName: "EditListingP
 const EmailVerificationPage = loadable(() => import(/* webpackChunkName: "EmailVerificationPage" */ '../containers/EmailVerificationPage/EmailVerificationPage'));
 const InboxPage = loadable(() => import(/* webpackChunkName: "InboxPage" */ '../containers/InboxPage/InboxPage'));
 const MakeOfferPage = loadable(() => import(/* webpackChunkName: "MakeOfferPage" */ '../containers/MakeOfferPage/MakeOfferPage'));
+const ListingSubmittedPage = loadable(() => import(/* webpackChunkName: "ListingSubmittedPage" */ '../containers/ListingSubmittedPage/ListingSubmittedPage'));
 const LandingPage = loadable(() => import(/* webpackChunkName: "LandingPage" */ '../containers/LandingPage/LandingPage'));
 const ListingPageCoverPhoto = loadable(() => import(/* webpackChunkName: "ListingPageCoverPhoto" */ /* webpackPrefetch: true */ '../containers/ListingPage/ListingPageCoverPhoto'));
 const ListingPageCarousel = loadable(() => import(/* webpackChunkName: "ListingPageCarousel" */ /* webpackPrefetch: true */ '../containers/ListingPage/ListingPageCarousel'));
@@ -160,6 +161,14 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
       prioritizeLibraryLoading: {
         stripe: true,
       },
+    },
+    // Shown after a new ad is submitted for review. Defined before ListingPageVariant,
+    // whose ":variant" segment would otherwise match "submitted".
+    {
+      path: '/l/:slug/:id/submitted',
+      name: 'ListingSubmittedPage',
+      auth: true,
+      component: ListingSubmittedPage,
     },
     {
       path: '/l/:slug/:id/:variant',

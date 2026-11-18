@@ -19,6 +19,8 @@ import EditListingPhotosPanel from './EditListingPhotosPanel/EditListingPhotosPa
 import EditListingPricingPanel from './EditListingPricingPanel/EditListingPricingPanel';
 import EditListingPricingAndStockPanel from './EditListingPricingAndStockPanel/EditListingPricingAndStockPanel';
 import EditListingStylePanel from './EditListingStylePanel/EditListingStylePanel';
+// Imported after the template panels to keep their CSS order unchanged
+import EditListingAdPanel from './EditListingAdPanel/EditListingAdPanel';
 
 import css from './EditListingWizardTab.module.css';
 
@@ -124,6 +126,7 @@ const EditListingWizardTab = props => {
     hasPendingFileUploads,
     allFilesUploadedAndVerified,
     filesRequired,
+    useSinglePageForm = false,
   } = props;
 
   const { type } = params;
@@ -214,7 +217,18 @@ const EditListingWizardTab = props => {
   // TODO: add missing cases for supported tabs
   switch (tab) {
     case DETAILS: {
-      return (
+      // Single-page ad form: details, price and photos are all edited on this one tab.
+      return useSinglePageForm ? (
+        <EditListingAdPanel
+          {...panelProps(DETAILS)}
+          onListingTypeChange={onListingTypeChange}
+          config={config}
+          listingImageConfig={config.layout.listingImage}
+          images={images}
+          onImageUpload={onImageUpload}
+          onRemoveImage={onRemoveImage}
+        />
+      ) : (
         <EditListingDetailsPanel
           {...panelProps(DETAILS)}
           onListingTypeChange={onListingTypeChange}

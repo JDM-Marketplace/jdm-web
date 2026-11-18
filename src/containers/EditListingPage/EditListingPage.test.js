@@ -2707,13 +2707,15 @@ describe('EditListingPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('Inquiry: edit flow on details tab', async () => {
+  // JDM: inquiry listings are edited on one page (EditListingAdPanel)
+  it('Inquiry: edit flow on the single-page ad form', async () => {
     const user = userEvent.setup();
     const config = getConfig(listingTypesInquiry, listingFieldsInquiry);
     const routeConfiguration = getRouteConfiguration(config.layout);
     const listing = createOwnListing('listing-inquiry', {
       title: 'the listing',
       description: 'Lorem ipsum',
+      price: new Money(5500, 'USD'),
       publicData: {
         listingType: 'inquiry',
         transactionProcessAlias: 'default-inquiry/release-1',
@@ -2738,47 +2740,27 @@ describe('EditListingPage', () => {
     });
 
     await waitFor(() => {
-      // Navigation to tab
-      const tabLabel = 'EditListingWizard.tabLabelDetails';
-      expect(getByText(tabLabel)).toBeInTheDocument();
-
-      // Tab: panel title
-      expect(getByText('EditListingDetailsPanel.title')).toBeInTheDocument();
-
-      // Tab/form: form title
-      expect(getByRole('textbox', { name: 'EditListingDetailsForm.title' })).toHaveValue(
+      expect(getByText('EditListingAdPanel.editTitle')).toBeInTheDocument();
+      expect(getByRole('textbox', { name: 'EditListingAdForm.titleLabel' })).toHaveValue(
         'the listing'
       );
-
-      // Tab/form: description
-      expect(getByRole('textbox', { name: 'EditListingDetailsForm.description' })).toHaveValue(
+      expect(getByRole('textbox', { name: 'EditListingAdForm.descriptionLabel' })).toHaveValue(
         'Lorem ipsum'
       );
 
-      // Tab/form: listing field
+      // Listing field from config
       expect(getByLabelText('Cat')).toBeInTheDocument();
-      expect(
-        getByRole('option', { name: 'CustomExtendedDataField.placeholderSingleSelect' }).selected
-      ).toBe(true);
+      expect(getByRole('option', { name: 'EditListingAdForm.selectPlaceholder' }).selected).toBe(
+        true
+      );
       expect(getByRole('option', { name: 'Cat 1' }).selected).toBe(false);
 
-      expect(
-        getByRole('button', { name: 'EditListingWizard.edit.saveDetails' })
-      ).toBeInTheDocument();
+      expect(getByRole('button', { name: 'EditListingAdPanel.saveChanges' })).toBeInTheDocument();
     });
 
-    // Test intercation
-    await user.selectOptions(
-      screen.getByRole('combobox'),
-      screen.getByRole('option', { name: 'Cat 1' })
-    );
-
-    expect(
-      getByRole('option', { name: 'CustomExtendedDataField.placeholderSingleSelect' }).selected
-    ).toBe(false);
+    await user.selectOptions(getByLabelText('Cat'), screen.getByRole('option', { name: 'Cat 1' }));
     expect(getByRole('option', { name: 'Cat 1' }).selected).toBe(true);
   });
-
   it('Inquiry: edit flow no pricing on details tab', async () => {
     const listingTypeInquiry = listingTypesInquiry[0];
     const inquiryNoPricing = { ...listingTypeInquiry, defaultListingFields: { price: false } };
@@ -2806,18 +2788,21 @@ describe('EditListingPage', () => {
       },
     };
 
-    const { queryByText } = render(<EditListingPage {...props} />, {
+    const { getByText, queryByText } = render(<EditListingPage {...props} />, {
       initialState: initialState(listing),
       config,
       routeConfiguration,
     });
 
     await waitFor(() => {
+      expect(getByText('EditListingAdPanel.editTitle')).toBeInTheDocument();
       // Navigation to tab
       const tabLabel1 = 'EditListingWizard.tabLabelPricingAndStock';
       expect(queryByText(tabLabel1)).not.toBeInTheDocument();
       const tabLabel2 = 'EditListingWizard.tabLabelPricing';
       expect(queryByText(tabLabel2)).not.toBeInTheDocument();
+      // Single-page form hides the price field
+      expect(queryByText('EditListingAdForm.priceLabel')).not.toBeInTheDocument();
     });
   });
 
@@ -2861,11 +2846,10 @@ describe('EditListingPage', () => {
     });
   });
 
-  it('Inquiry: edit flow on location tab', async () => {
-    const user = userEvent.setup();
+  it('Inquiry: single-page ad form has no wizard tabs for location, pricing or photos', async () => {
     const config = getConfig(listingTypesInquiry, listingFieldsInquiry);
     const routeConfiguration = getRouteConfiguration(config.layout);
-    const listing = createOwnListing('listing-item', {
+    const listing = createOwnListing('listing-inquiry', {
       title: 'the listing',
       description: 'Lorem ipsum',
       price: new Money(5500, 'USD'),
@@ -2873,11 +2857,6 @@ describe('EditListingPage', () => {
         listingType: 'inquiry',
         transactionProcessAlias: 'default-inquiry/release-1',
         unitType: 'inquiry',
-        category: 'cat_1',
-        location: {
-          address: 'Main Street 123',
-          building: 'A 1',
-        },
       },
     });
 
@@ -2887,108 +2866,27 @@ describe('EditListingPage', () => {
         id: listing.id.uuid,
         slug: 'slug',
         type: LISTING_PAGE_PARAM_TYPE_EDIT,
-        tab: LOCATION,
+        tab: DETAILS,
       },
     };
 
-    const { getByText, getByRole, getByLabelText, getByPlaceholderText } = render(
-      <EditListingPage {...props} />,
-      {
-        initialState: initialState(listing),
-        config,
-        routeConfiguration,
-      }
-    );
+    const { getByText, queryByText } = render(<EditListingPage {...props} />, {
+      initialState: initialState(listing),
+      config,
+      routeConfiguration,
+    });
 
     await waitFor(() => {
-      // Navigation to tab
-      const tabLabel = 'EditListingWizard.tabLabelLocation';
-      expect(getByText(tabLabel)).toBeInTheDocument();
-
-      // Tab: panel title
-      expect(getByText('EditListingLocationPanel.title')).toBeInTheDocument();
-
-      // Tab/form: existing address
-      expect(getByPlaceholderText('EditListingLocationForm.addressPlaceholder')).toHaveValue(
-        'Main Street 123'
-      );
-
-      // Tab/form: existing building
-      expect(getByLabelText('EditListingLocationForm.building')).toHaveValue('A 1');
-
-      expect(
-        getByRole('button', { name: 'EditListingWizard.edit.saveLocation' })
-      ).toBeInTheDocument();
+      expect(getByText('EditListingAdPanel.editTitle')).toBeInTheDocument();
     });
-
-    // Test intercation
-    await user.clear(getByLabelText('EditListingLocationForm.building'));
-    await user.type(getByLabelText('EditListingLocationForm.building'), 'B 2');
-
-    // Tab/form: existing building
-    expect(getByLabelText('EditListingLocationForm.building')).toHaveValue('B 2');
+    expect(queryByText('EditListingWizard.tabLabelLocation')).not.toBeInTheDocument();
+    expect(queryByText('EditListingWizard.tabLabelPricing')).not.toBeInTheDocument();
+    expect(queryByText('EditListingWizard.tabLabelPhotos')).not.toBeInTheDocument();
   });
-
-  it('Inquiry: edit flow on pricing tab', async () => {
+  it('Inquiry: single-page ad form shows the price', async () => {
     const config = getConfig(listingTypesInquiry, listingFieldsInquiry);
     const routeConfiguration = getRouteConfiguration(config.layout);
-    const listing = createOwnListing('listing-item', {
-      title: 'the listing',
-      description: 'Lorem ipsum',
-      publicData: {
-        listingType: 'inquiry',
-        transactionProcessAlias: 'default-inquiry/release-1',
-        unitType: 'inquiry',
-        category: 'cat_1',
-        location: {
-          address: 'Main Street 123',
-          building: 'A 1',
-        },
-      },
-    });
-
-    const props = {
-      ...commonProps,
-      params: {
-        id: listing.id.uuid,
-        slug: 'slug',
-        type: LISTING_PAGE_PARAM_TYPE_EDIT,
-        tab: PRICING,
-      },
-    };
-
-    const { getByText, getByRole, getByLabelText, getByPlaceholderText } = render(
-      <EditListingPage {...props} />,
-      {
-        initialState: initialState(listing),
-        config,
-        routeConfiguration,
-      }
-    );
-
-    await waitFor(() => {
-      // Navigation to tab
-      const tabLabel = 'EditListingWizard.tabLabelPricing';
-      expect(getByText(tabLabel)).toBeInTheDocument();
-
-      // Tab: panel title
-      expect(getByText('EditListingPricingPanel.title')).toBeInTheDocument();
-
-      // Tab/form: existing address
-      expect(getByPlaceholderText('EditListingPricingForm.priceInputPlaceholder')).toHaveValue(
-        '$55.00'
-      );
-
-      expect(
-        getByRole('button', { name: 'EditListingWizard.edit.savePricing' })
-      ).toBeInTheDocument();
-    });
-  });
-
-  it('Inquiry: edit flow on photos tab', async () => {
-    const config = getConfig(listingTypesInquiry, listingFieldsInquiry);
-    const routeConfiguration = getRouteConfiguration(config.layout);
-    const listing = createOwnListing('listing-item', {
+    const listing = createOwnListing('listing-inquiry', {
       title: 'the listing',
       description: 'Lorem ipsum',
       price: new Money(5500, 'USD'),
@@ -2996,11 +2894,6 @@ describe('EditListingPage', () => {
         listingType: 'inquiry',
         transactionProcessAlias: 'default-inquiry/release-1',
         unitType: 'inquiry',
-        category: 'cat_1',
-        location: {
-          address: 'Main Street 123',
-          building: 'A 1',
-        },
       },
     });
 
@@ -3010,7 +2903,41 @@ describe('EditListingPage', () => {
         id: listing.id.uuid,
         slug: 'slug',
         type: LISTING_PAGE_PARAM_TYPE_EDIT,
-        tab: PHOTOS,
+        tab: DETAILS,
+      },
+    };
+
+    const { getByLabelText } = render(<EditListingPage {...props} />, {
+      initialState: initialState(listing),
+      config,
+      routeConfiguration,
+    });
+
+    await waitFor(() => {
+      expect(getByLabelText('EditListingAdForm.priceLabel')).toHaveValue('$55.00');
+    });
+  });
+  it('Inquiry: single-page ad form shows the photo drop zone', async () => {
+    const config = getConfig(listingTypesInquiry, listingFieldsInquiry);
+    const routeConfiguration = getRouteConfiguration(config.layout);
+    const listing = createOwnListing('listing-inquiry', {
+      title: 'the listing',
+      description: 'Lorem ipsum',
+      price: new Money(5500, 'USD'),
+      publicData: {
+        listingType: 'inquiry',
+        transactionProcessAlias: 'default-inquiry/release-1',
+        unitType: 'inquiry',
+      },
+    });
+
+    const props = {
+      ...commonProps,
+      params: {
+        id: listing.id.uuid,
+        slug: 'slug',
+        type: LISTING_PAGE_PARAM_TYPE_EDIT,
+        tab: DETAILS,
       },
     };
 
@@ -3021,20 +2948,12 @@ describe('EditListingPage', () => {
     });
 
     await waitFor(() => {
-      // Navigation to tab
-      const tabLabel = 'EditListingWizard.tabLabelPhotos';
-      expect(getByText(tabLabel)).toBeInTheDocument();
-
-      // Tab: panel title
-      expect(getByText('EditListingPhotosPanel.title')).toBeInTheDocument();
-
-      expect(getByText('EditListingPhotosForm.chooseImage')).toBeInTheDocument();
-      expect(getByText('EditListingPhotosForm.imageTypes')).toBeInTheDocument();
-      expect(getByText('EditListingPhotosForm.addImagesTip')).toBeInTheDocument();
-      expect(getByText('EditListingWizard.edit.savePhotos')).toBeInTheDocument();
+      expect(getByText('EditListingAdForm.photosLabel')).toBeInTheDocument();
+      expect(getByText('EditListingAdForm.dropzoneTitle')).toBeInTheDocument();
+      expect(getByText('EditListingAdForm.dropzoneHint')).toBeInTheDocument();
+      expect(getByText('EditListingAdForm.photosTip')).toBeInTheDocument();
     });
   });
-
   it('Inquiry: edit flow with no description', async () => {
     const listingTypesInquiryNoDescription = [
       {
@@ -3067,15 +2986,18 @@ describe('EditListingPage', () => {
       },
     };
 
-    const { queryByRole } = render(<EditListingPage {...props} />, {
+    const { getByText, queryByRole } = render(<EditListingPage {...props} />, {
       initialState: initialState(listing),
       config,
       routeConfiguration,
     });
 
+    await waitFor(() => {
+      expect(getByText('EditListingAdPanel.editTitle')).toBeInTheDocument();
+    });
     // Description should be hidden based on current listing type
     expect(
-      queryByRole('textbox', { name: 'EditListingDetailsForm.description' })
+      queryByRole('textbox', { name: 'EditListingAdForm.descriptionLabel' })
     ).not.toBeInTheDocument();
   });
 

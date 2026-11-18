@@ -812,6 +812,20 @@ const editListingPageSlice = createSlice({
     clearPublishError: state => {
       state.publishListingError = null;
     },
+    // JDM: forget the previously submitted ad when a new ad form is opened. Otherwise the
+    // page still sees the published listing and redirects to its "submitted" page, and
+    // photos uploaded for the previous ad would show up in the new form.
+    resetNewListingState: state => {
+      state.listingId = null;
+      state.submittedListingId = null;
+      state.listingDraft = null;
+      state.redirectToListing = false;
+      state.createListingDraftError = null;
+      state.uploadImageError = null;
+      state.uploadedImages = {};
+      state.uploadedImagesOrder = [];
+      state.removedImageIds = [];
+    },
     removeListingImage: (state, action) => {
       const id = action.payload;
 
@@ -1184,6 +1198,7 @@ export const {
   markTabUpdated,
   clearUpdatedTab,
   clearPublishError,
+  resetNewListingState,
   removeListingImage,
   setUploadProgress,
   setVerificationStatus,
@@ -1240,6 +1255,7 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
   }
 
   if (type === 'new') {
+    dispatch(resetNewListingState());
     // No need to listing data when creating a new listing
     return Promise.all([dispatch(fetchCurrentUser(fetchCurrentUserOptions))])
       .then(response => {

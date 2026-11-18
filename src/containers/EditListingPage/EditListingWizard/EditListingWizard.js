@@ -66,6 +66,10 @@ import css from './EditListingWizard.module.css';
 // This is the initial tab on editlisting wizard.
 // When listing type is known, other tabs are checked from _tabsForListingType_ function.
 const TABS_DETAILS_ONLY = [DETAILS];
+// JDM: listings that use the inquiry process are created on one page (EditListingAdPanel)
+// instead of the multi-tab wizard. Other processes (booking, purchase...) keep the template's
+// wizard, since the single page doesn't handle availability, stock or delivery.
+const USE_SINGLE_PAGE_FORM_FOR_INQUIRY = true;
 
 // Tabs are horizontal in small screens
 const MAX_HORIZONTAL_NAV_SCREEN_WIDTH = 1023;
@@ -589,11 +593,16 @@ class EditListingWizard extends Component {
     const hasListingTypeSelected =
       existingListingType || this.state.selectedListingType || validListingTypes.length === 1;
 
-    // For oudated draft listing, we don't show other tabs but the "details"
-    const tabs =
-      isNewListingFlow && (invalidExistingListingType || !hasListingTypeSelected)
-        ? TABS_DETAILS_ONLY
-        : tabsForListingType(processName, listingTypeConfig);
+    // JDM: the whole ad (details, price, photos) is edited on one page, the "details" tab.
+    // tabsForListingType is kept so that the template's multi-tab flow is easy to restore.
+    const useSinglePageForm =
+      USE_SINGLE_PAGE_FORM_FOR_INQUIRY &&
+      resolveLatestProcessName(processName) === INQUIRY_PROCESS_NAME;
+    const tabs = useSinglePageForm
+      ? TABS_DETAILS_ONLY
+      : isNewListingFlow && (invalidExistingListingType || !hasListingTypeSelected)
+      ? TABS_DETAILS_ONLY
+      : tabsForListingType(processName, listingTypeConfig);
 
     // Check if wizard tab is active / linkable.
     // When creating a new listing, we don't allow users to access next tab until the current one is completed.
@@ -601,6 +610,11 @@ class EditListingWizard extends Component {
 
     // Redirect user to first tab when encoutering outdated draft listings.
     if (invalidExistingListingType && isNewListingFlow && selectedTab !== tabs[0]) {
+      return <NamedRedirect name="EditListingPage" params={{ ...params, tab: tabs[0] }} />;
+    }
+
+    // Old links to tabs that no longer exist (e.g. /photos) lead to the first tab.
+    if (!tabs.includes(selectedTab)) {
       return <NamedRedirect name="EditListingPage" params={{ ...params, tab: tabs[0] }} />;
     }
 
@@ -706,8 +720,8 @@ class EditListingWizard extends Component {
     return (
       <div className={classes}>
         <Tabs
-          rootClassName={css.tabsContainer}
-          navRootClassName={css.nav}
+          rootClassName={useSinglePageForm ? css.singlePageContainer : css.tabsContainer}
+          navRootClassName={useSinglePageForm ? css.navHidden : css.nav}
           tabRootClassName={css.tab}
           ariaLabel={intl.formatMessage({ id: 'EditListingWizard.screenreader.tabNavigation' })}
         >
@@ -736,6 +750,7 @@ class EditListingWizard extends Component {
                 errors={errors}
                 handleCreateFlowTabScrolling={this.handleCreateFlowTabScrolling}
                 handlePublishListing={this.handlePublishListing}
+                useSinglePageForm={useSinglePageForm}
                 fetchInProgress={fetchInProgress}
                 onListingTypeChange={selectedListingType => this.setState({ selectedListingType })}
                 onManageDisableScrolling={onManageDisableScrolling}

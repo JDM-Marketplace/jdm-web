@@ -234,3 +234,70 @@
     width: 241px;
   }
 }
+
+/* Wide drop zone variant (ListingImagesField variant="dropzone") */
+.dropzone {
+  position: relative;
+  width: 100%;
+}
+
+.dropzoneLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 144px;
+  padding: 24px;
+  text-align: center;
+
+  background-color: var(--colorGrey50);
+  border: 2px dashed var(--colorGrey300);
+  border-radius: var(--borderRadiusMedium);
+  cursor: pointer;
+  transition: border-color var(--transitionStyleButton),
+    background-color var(--transitionStyleButton);
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--colorGrey700);
+    }
+  }
+
+  @media (--viewportMedium) {
+    min-height: 168px;
+  }
+}
+
+.addImageInput:focus-visible ~ .dropzoneLabel {
+  border-color: var(--colorGrey700);
+  outline: 2px solid var(--marketplaceColor);
+  outline-offset: 2px;
+}
+
+.dropzoneActive .dropzoneLabel {
+  border-color: var(--marketplaceColor);
+  background-color: var(--colorWhite);
+}
+
+.dropzoneDisabled .dropzoneLabel {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.imagesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  user-select: none;
+
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+.imagesGridEmpty {
+  margin-top: 0;
+}
