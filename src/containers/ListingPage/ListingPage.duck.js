@@ -29,6 +29,8 @@ import {
   OFFER,
 } from '../../transactions/transaction';
 import { fetchCurrentUser, setCurrentUserHasOrders } from '../../ducks/user.duck';
+import { JDM_CARD_PUBLIC_DATA_FIELDS } from '../../util/jdmFields';
+import { jdmSeoPageForListing } from '../../util/jdmSearchUrls';
 
 const { UUID } = sdkTypes;
 const MINUTE_IN_MS = 1000 * 60;
@@ -411,6 +413,107 @@ export const fetchTransactionLineItems = ({ orderData, listingId, isOwnListing }
   return dispatch(fetchTransactionLineItemsThunk({ orderData, listingId, isOwnListing }));
 };
 
+/////////////////////////////
+// Fetch Similar Listings  //
+/////////////////////////////
+
+// JDM: the design shows two rows of four similar listings
+export const SIMILAR_LISTINGS_COUNT = 8;
+
+/**
+ * Query params of the similar listings: the same category, make and model (cars) or part make
+ * (parts) as the listing. One extra listing is fetched, as the listing itself can be among the
+ * results (the API can't exclude it). The fields are the ones the JDM listing card shows.
+ *
+ * @param {Object} listing the listing on the page
+ * @param {Object} config marketplace config
+ * @returns {Object|null} null when the listing has no JDM category
+ */
+export const similarListingsQueryParams = (listing, config) => {
+  const publicData = listing?.attributes?.publicData || {};
+  const seoPage = jdmSeoPageForListing(publicData, config.listing?.listingFields);
+  if (!seoPage) {
+    return null;
+  }
+  const {
+    aspectWidth = 1,
+    aspectHeight = 1,
+    variantPrefix = 'listing-card',
+  } = config.layout.listingImage;
+  const aspectRatio = aspectHeight / aspectWidth;
+
+  return {
+    ...seoPage.filters,
+    page: 1,
+    perPage: SIMILAR_LISTINGS_COUNT + 1,
+    minStock: 1,
+    stockMode: 'match-undefined',
+    include: ['author', 'images'],
+    'fields.listing': [
+      'title',
+      'price',
+      'deleted',
+      'state',
+      'publicData.listingType',
+      'publicData.transactionProcessAlias',
+      'publicData.unitType',
+      'publicData.cardStyle',
+      // JDM listing card: year, make, model, state, odometer / condition
+      ...JDM_CARD_PUBLIC_DATA_FIELDS,
+    ],
+    'fields.user': ['profile.displayName', 'profile.abbreviatedName'],
+    'fields.image': [
+      'variants.scaled-small',
+      'variants.scaled-medium',
+      `variants.${variantPrefix}`,
+      `variants.${variantPrefix}-2x`,
+    ],
+    ...createImageVariantConfig(`${variantPrefix}`, 400, aspectRatio),
+    ...createImageVariantConfig(`${variantPrefix}-2x`, 800, aspectRatio),
+    'limit.images': 1,
+  };
+};
+
+const fetchSimilarListingsPayloadCreator = (
+  { listing, config },
+  { dispatch, rejectWithValue, extra: sdk }
+) => {
+  const params = similarListingsQueryParams(listing, config);
+  if (!params) {
+    return Promise.resolve([]);
+  }
+  return sdk.listings
+    .query(params)
+    .then(response => {
+      // The listing itself comes back with the card's sparse fields and one image. It must not
+      // reach the store, where it would replace the full listing shown on the page.
+      const others = response.data.data
+        .filter(l => l.id.uuid !== listing.id.uuid)
+        .slice(0, SIMILAR_LISTINGS_COUNT);
+      const withoutListing = { ...response, data: { ...response.data, data: others } };
+      const sanitizeConfig = { listingFields: config?.listing?.listingFields };
+      dispatch(addMarketplaceEntities(withoutListing, sanitizeConfig));
+      return others.map(l => l.id);
+    })
+    .catch(e => {
+      log.error(e, 'fetch-similar-listings-failed', { listingId: listing?.id?.uuid });
+      return rejectWithValue(storableError(e));
+    });
+};
+
+/**
+ * Similar listings are fetched by the page when their section scrolls into view, not in loadData,
+ * so they cost nothing for visitors who never scroll that far.
+ */
+export const fetchSimilarListingsThunk = createAsyncThunk(
+  'ListingPage/fetchSimilarListings',
+  fetchSimilarListingsPayloadCreator
+);
+// Backward compatible wrapper for the thunk
+export const fetchSimilarListings = (listing, config) => dispatch => {
+  return dispatch(fetchSimilarListingsThunk({ listing, config }));
+};
+
 // ================ Slice ================ //
 
 const initialState = {
@@ -441,6 +544,11 @@ const initialState = {
   sendInquiryInProgress: false,
   sendInquiryError: null,
   inquiryModalOpenForListingId: null,
+  // JDM: similar listings of the listing with id similarListingsForId (uuid)
+  similarListingsForId: null,
+  similarListingIds: [],
+  similarListingsInProgress: false,
+  similarListingsError: null,
 };
 
 const listingPageSlice = createSlice({
@@ -560,6 +668,25 @@ const listingPageSlice = createSlice({
       .addCase(fetchTransactionLineItemsThunk.rejected, (state, action) => {
         state.fetchLineItemsInProgress = false;
         state.fetchLineItemsError = action.payload;
+      })
+      .addCase(fetchSimilarListingsThunk.pending, (state, action) => {
+        state.similarListingsForId = action.meta.arg.listing?.id?.uuid || null;
+        state.similarListingIds = [];
+        state.similarListingsInProgress = true;
+        state.similarListingsError = null;
+      })
+      .addCase(fetchSimilarListingsThunk.fulfilled, (state, action) => {
+        // Ignore a response for a listing the visitor already left
+        if (state.similarListingsForId === action.meta.arg.listing?.id?.uuid) {
+          state.similarListingIds = action.payload;
+          state.similarListingsInProgress = false;
+        }
+      })
+      .addCase(fetchSimilarListingsThunk.rejected, (state, action) => {
+        if (state.similarListingsForId === action.meta.arg.listing?.id?.uuid) {
+          state.similarListingsInProgress = false;
+          state.similarListingsError = action.payload;
+        }
       });
   },
 });

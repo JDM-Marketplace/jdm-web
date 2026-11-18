@@ -32,6 +32,9 @@ import reducer, {
   loadData,
   setInitialValues,
   getShowListingImageParams,
+  fetchSimilarListings,
+  fetchSimilarListingsThunk,
+  similarListingsQueryParams,
 } from './ListingPage.duck';
 
 import ActionBar from './Notifications/ActionBar';
@@ -330,6 +333,145 @@ describe('ListingPage variants', () => {
   });
 });
 
+// JDM car listing (inquiry listing type) for the Miro listing page
+const jdmListingTypes = [
+  ...listingTypes,
+  {
+    id: 'standard-jdm-cars-listings',
+    transactionProcess: { name: 'default-inquiry', alias: 'default-inquiry/release-1' },
+    unitType: 'inquiry',
+    defaultListingFields: { images: true, description: true, price: true },
+  },
+];
+const jdmCarsOnly = { limitToCategoryIds: true, categoryIds: ['jdm-cars'] };
+const jdmListingFields = [
+  {
+    key: 'make',
+    scope: 'public',
+    schemaType: 'enum',
+    categoryConfig: jdmCarsOnly,
+    enumOptions: [{ option: 'nissan', label: 'Nissan' }],
+  },
+  {
+    key: 'model',
+    scope: 'public',
+    schemaType: 'enum',
+    categoryConfig: jdmCarsOnly,
+    enumOptions: [{ option: 'nissan-silvia', label: 'Silvia' }],
+  },
+  {
+    key: 'state',
+    scope: 'public',
+    schemaType: 'enum',
+    categoryConfig: jdmCarsOnly,
+    enumOptions: [{ option: 'vic', label: 'Victoria' }],
+  },
+  { key: 'year', scope: 'public', schemaType: 'long', categoryConfig: jdmCarsOnly },
+  { key: 'odometer', scope: 'public', schemaType: 'long', categoryConfig: jdmCarsOnly },
+];
+const jdmCategories = [{ id: 'jdm-cars', name: 'JDM Cars' }];
+const getJdmConfig = () => {
+  const config = getConfig('carousel');
+  return {
+    ...config,
+    listingTypes: { listingTypes: jdmListingTypes },
+    listingFields: { listingFields: jdmListingFields },
+    categories: { categories: jdmCategories },
+  };
+};
+const jdmId = 'jdm-listing-1';
+const jdmListing = createListing(
+  jdmId,
+  {
+    title: 'Clean S15 Spec R',
+    description: 'One owner.\nNever tracked.',
+    publicData: {
+      listingType: 'standard-jdm-cars-listings',
+      transactionProcessAlias: 'default-inquiry/release-1',
+      unitType: 'inquiry',
+      categoryLevel1: 'jdm-cars',
+      make: 'nissan',
+      model: 'nissan-silvia',
+      state: 'vic',
+      year: 2001,
+      odometer: 120000,
+    },
+  },
+  { author: createUser('user-1'), images: [] }
+);
+const jdmInitialState = {
+  ...initialState,
+  ListingPage: { ...initialState.ListingPage, id: jdmListing.id, reviews: [] },
+  marketplaceData: { entities: { listing: { [jdmId]: jdmListing } } },
+};
+
+describe('ListingPage JDM layout', () => {
+  it('renders breadcrumbs, the title, specs, the price box and similar listings', async () => {
+    const config = getJdmConfig();
+    const routeConfiguration = getRouteConfiguration(config.layout);
+    const ListingPage = routeConfiguration.find(conf => conf.name === 'ListingPage').component;
+    const props = {
+      params: { id: jdmId, slug: 'clean-s15-spec-r' },
+      scrollingDisabled: false,
+      onManageDisableScrolling: noop,
+      callSetInitialValues: noop,
+      setInitialValues: noop,
+    };
+
+    const { getByRole, getAllByRole, getByText, queryByTestId } = render(
+      <ListingPage {...props} />,
+      { initialState: jdmInitialState, config, routeConfiguration }
+    );
+
+    await waitFor(() => {
+      // Title is the h1 (client: "<h1>"), sections are h2
+      expect(getByRole('heading', { level: 1, name: 'Clean S15 Spec R' })).toBeInTheDocument();
+      expect(
+        getByRole('heading', { level: 2, name: 'ListingPage.jdm.specsTitle' })
+      ).toBeInTheDocument();
+      expect(
+        getByRole('heading', { level: 2, name: 'ListingPage.jdm.descriptionTitle' })
+      ).toBeInTheDocument();
+      expect(
+        getByRole('heading', { level: 2, name: 'ListingPage.jdm.similarTitle' })
+      ).toBeInTheDocument();
+      // Not the template carousel layout
+      expect(queryByTestId('carousel')).not.toBeInTheDocument();
+    });
+
+    // Breadcrumbs: Home > JDM Cars > Nissan > Silvia > title
+    const crumbs = within(getByRole('navigation', { name: 'JdmSeo.breadcrumbAriaLabel' }));
+    expect(crumbs.getByRole('link', { name: 'JdmSeo.breadcrumbCars' })).toHaveAttribute(
+      'href',
+      '/jdm-cars/'
+    );
+    expect(crumbs.getByRole('link', { name: 'Silvia' })).toHaveAttribute(
+      'href',
+      '/jdm-cars/nissan/silvia/'
+    );
+
+    // Specs are list items (client: "<li>"), Make and Model link to their search pages
+    const specs = within(
+      getByRole('heading', { name: 'ListingPage.jdm.specsTitle' }).parentNode
+    ).getAllByRole('listitem');
+    expect(specs.map(li => li.textContent)).toEqual([
+      'ListingPage.jdm.specMakeNissan',
+      'ListingPage.jdm.specModelSilvia',
+      'ListingPage.jdm.specYear2001',
+      'ListingPage.jdm.specLocationVictoria',
+      'ListingPage.jdm.specOdometerListingCard.odometer',
+    ]);
+    const specLinks = getAllByRole('link', { name: 'Nissan' });
+    expect(specLinks.some(a => a.getAttribute('href') === '/jdm-cars/nissan/')).toBe(true);
+
+    // No photos: a placeholder instead of an empty gallery
+    expect(getByText('ListingPage.jdm.noPhotos')).toBeInTheDocument();
+    // Price box
+    expect(getByRole('button', { name: /ListingPage.jdm.messageSeller/ })).toBeInTheDocument();
+    expect(getByText('ListingPage.jdm.seller')).toBeInTheDocument();
+  });
+});
+
 describe('Duck', () => {
   const listingFields = [];
   const config = {
@@ -362,6 +504,10 @@ describe('Duck', () => {
         sendInquiryInProgress: false,
         sendInquiryError: null,
         inquiryModalOpenForListingId: null,
+        similarListingsForId: null,
+        similarListingIds: [],
+        similarListingsInProgress: false,
+        similarListingsError: null,
       });
     });
 
@@ -849,5 +995,69 @@ describe('ActionBar', () => {
       />
     );
     expect(actionBar.asFragment().firstChild).toBeNull();
+  });
+});
+
+describe('Similar listings', () => {
+  const config = {
+    layout: { listingImage: { aspectWidth: 4, aspectHeight: 3, variantPrefix: 'listing-card' } },
+    listing: { listingFields: jdmListingFields },
+  };
+  const other = createListing('jdm-listing-2', {
+    publicData: { categoryLevel1: 'jdm-cars', make: 'nissan', model: 'nissan-silvia' },
+  });
+
+  it('queries the same category, make and model with the card fields', () => {
+    const params = similarListingsQueryParams(jdmListing, config);
+    expect(params).toEqual(
+      expect.objectContaining({
+        pub_categoryLevel1: 'jdm-cars',
+        pub_make: 'nissan',
+        pub_model: 'nissan-silvia',
+        perPage: 9,
+        'limit.images': 1,
+      })
+    );
+    expect(params['fields.listing']).toEqual(
+      expect.arrayContaining(['title', 'price', 'publicData.year', 'publicData.odometer'])
+    );
+    expect(params).not.toHaveProperty('pub_state');
+  });
+
+  it('queries nothing for listings outside the JDM categories', () => {
+    expect(similarListingsQueryParams(listing1, config)).toBeNull();
+  });
+
+  it('leaves the listing itself out of the results and the store', () => {
+    const response = { data: { data: [jdmListing, other], included: [] } };
+    const sdk = { listings: { query: jest.fn(() => Promise.resolve(response)) } };
+    const actions = [];
+    const store = configureStore({
+      initialState: { ListingPage: reducer(undefined, { type: '@@INIT' }) },
+      sdk,
+      extraMiddlewares: [logger(actions)],
+    });
+
+    return store.dispatch(fetchSimilarListings(jdmListing, config)).then(() => {
+      const added = actions.find(a => a.type === 'marketplaceData/addEntities');
+      expect(added.payload.sdkResponse.data.data).toEqual([other]);
+      const state = store.getState().ListingPage;
+      expect(state.similarListingsForId).toEqual(jdmId);
+      expect(state.similarListingIds).toEqual([other.id]);
+      expect(state.similarListingsInProgress).toBe(false);
+    });
+  });
+
+  it('ignores results for a listing the visitor already left', () => {
+    const arg = { listing: jdmListing, config };
+    const pending = reducer(undefined, fetchSimilarListingsThunk.pending('req1', arg));
+    const moved = reducer(
+      pending,
+      fetchSimilarListingsThunk.pending('req2', { listing: other, config })
+    );
+    const stale = reducer(moved, fetchSimilarListingsThunk.fulfilled([other.id], 'req1', arg));
+    expect(stale.similarListingsForId).toEqual('jdm-listing-2');
+    expect(stale.similarListingIds).toEqual([]);
+    expect(stale.similarListingsInProgress).toBe(true);
   });
 });

@@ -1,0 +1,211 @@
+@import '../../../styles/customMediaQueries.css';
+
+/*
+ * Photo mosaic (Miro "Listing Ad Page Template"): the main photo on the left and a 2 × 3 grid
+ * of six more on the right. With fewer photos, `data-count` picks a grid without empty cells:
+ *
+ *   1 photo   one photo, shown whole (contain)
+ *   2         two halves
+ *   3         main + one column of 2
+ *   4         main + 2 + 1 wide
+ *   5         main + 2 × 2
+ *   6         main + 2 × 2 + 1 wide
+ *   7+        main + 2 × 3 (the design)
+ *
+ * Phones show the main photo, and a row of three more when there are at least four.
+ * "All photos (N)" always opens the carousel with every photo.
+ */
+.root {
+  position: relative;
+  /* cqw below: the pill sits on the main photo, above the phone thumbnail row */
+  container-type: inline-size;
+}
+
+.mosaic {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  @media (--viewportMedium) {
+    aspect-ratio: 8 / 3;
+    grid-template-columns: minmax(0, 3fr) repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.tile {
+  position: relative;
+  display: none;
+  aspect-ratio: 4 / 3;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--borderRadiusMedium);
+  overflow: hidden;
+  background-color: var(--colorGrey100);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus-visible {
+    outline: 2px solid var(--marketplaceColor);
+    outline-offset: 2px;
+  }
+
+  @media (--viewportMedium) {
+    display: block;
+    aspect-ratio: auto;
+    min-height: 0;
+  }
+}
+
+.mainTile {
+  display: block;
+  grid-column: 1 / -1;
+
+  @media (--viewportMedium) {
+    grid-column: 1;
+    grid-row: 1 / -1;
+  }
+}
+
+/* Phones: a row of three small photos under the main one, from four photos up */
+.mosaic:is([data-count='4'], [data-count='5'], [data-count='6'], [data-count='7'])
+  .tile:nth-child(-n + 4) {
+  display: block;
+}
+
+@media (--viewportMedium) {
+  .mosaic[data-count='1'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .mosaic[data-count='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .mosaic[data-count='3'] {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  .mosaic:is([data-count='4'], [data-count='5']) {
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  /* An odd number of small photos: the last one takes both columns */
+  .mosaic[data-count='4'] .tile:nth-child(4),
+  .mosaic[data-count='6'] .tile:nth-child(6) {
+    grid-column: span 2;
+  }
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Pure black at 10% so the edge never tints the photo */
+  outline: 1px solid rgb(0 0 0 / 10%);
+  outline-offset: -1px;
+  border-radius: inherit;
+  transition: filter 150ms ease-out;
+
+  @media (hover: hover) {
+    .tile:hover & {
+      filter: brightness(0.9);
+    }
+  }
+}
+
+/* A single photo is shown whole rather than cropped to the wide frame */
+.imageContain {
+  object-fit: contain;
+  outline: none;
+  background-color: var(--colorGrey50);
+}
+
+.allPhotos {
+  position: absolute;
+  inset-block-end: 12px;
+  inset-inline-end: 12px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--borderRadiusMedium);
+  background-color: var(--colorWhite);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 12%), 0 4px 12px rgb(0 0 0 / 12%);
+  color: var(--colorGrey900);
+  font-size: 14px;
+  font-weight: var(--fontWeightSemiBold);
+  line-height: 1.3;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 150ms ease-out, scale 150ms ease-out;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--colorGrey50);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:active {
+      scale: 0.96;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--marketplaceColor);
+    outline-offset: 2px;
+  }
+
+  @media (--viewportMedium) {
+    inset-block-end: 16px;
+    inset-inline-end: 16px;
+  }
+}
+
+/* Phones with a thumbnail row (4+ photos): lift the pill onto the main photo. A thumbnail is
+   a third of the width minus the two 8px gaps, at 4:3, plus the 8px gap above the row. */
+@media (max-width: 767px) {
+  .root:is([data-count='4'], [data-count='5'], [data-count='6'], [data-count='7']) .allPhotos {
+    inset-block-end: calc((100cqw - 16px) / 4 + 8px + 12px);
+  }
+}
+
+/* No photos: a calm placeholder the size of the main photo */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  aspect-ratio: 4 / 3;
+  padding: 24px;
+  border-radius: var(--borderRadiusMedium);
+  background-color: var(--colorGrey50);
+  border: 1px solid var(--colorGrey100);
+  color: var(--colorGrey600);
+
+  /* Shorter than the photo frame: there is nothing to look at */
+  @media (--viewportMedium) {
+    aspect-ratio: 4 / 1;
+  }
+}
+
+.placeholderIcon {
+  color: var(--colorGrey400);
+  fill: none;
+}
+
+.placeholderText {
+  margin: 0;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: var(--fontWeightMedium);
+}

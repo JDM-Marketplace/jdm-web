@@ -33,7 +33,8 @@ export const CARS_CATEGORY_ID = 'jdm-cars';
 export const PARTS_CATEGORY_ID = 'jdm-parts';
 
 // The search schema for categories is fixed to categoryLevel1..3 (see configHelpers.js)
-export const CATEGORY_PARAM = 'pub_categoryLevel1';
+const CATEGORY_KEY = 'categoryLevel1';
+export const CATEGORY_PARAM = `pub_${CATEGORY_KEY}`;
 const MAKE_PARAM = `pub_${MAKE_FIELD_KEY}`;
 const MODEL_PARAM = `pub_${MODEL_FIELD_KEY}`;
 const PART_MAKE_PARAM = `pub_${PART_MAKE_FIELD_KEY}`;
@@ -491,4 +492,67 @@ export const jdmSeoUrl = ({ pathname, searchParams }) => {
 export const jdmSeoUrlForSearch = (search, listingFields) => {
   const seoLocation = jdmSeoLocationFromSearchParams(parse(search, LAT_LNG_OPTIONS), listingFields);
   return seoLocation ? jdmSeoUrl(seoLocation) : null;
+};
+
+/**
+ * The SEO search page a JDM listing belongs to, in the shape parseJdmSeoPath returns: the car
+ * category with the listing's make and model, or the parts category with its part make. The state
+ * is left out, so the page lists the same cars all over Australia.
+ *
+ * The listing page uses it for its breadcrumbs (jdmSeoPageMeta), the Make and Model links
+ * (jdmSeoBasePath) and the similar listings query (filters).
+ *
+ * @param {Object} publicData listing public data
+ * @param {Array<Object>} listingFields config.listing.listingFields
+ * @returns {Object|null} { type, page, make, model, partMake, state, filters }, or null for
+ *   listings outside the JDM categories
+ */
+export const jdmSeoPageForListing = (publicData = {}, listingFields = []) => {
+  const category = publicData[CATEGORY_KEY];
+
+  if (category === CARS_CATEGORY_ID) {
+    const make = findOption(listingFields, MAKE_FIELD_KEY, singleValue(publicData[MAKE_FIELD_KEY]));
+    const modelOption =
+      make && make.option !== OTHER_MAKE_ID
+        ? findOption(listingFields, MODEL_FIELD_KEY, singleValue(publicData[MODEL_FIELD_KEY]))
+        : null;
+    // A model of another make has no page under this make
+    const model =
+      modelOption && modelToSegment(make.option, modelOption.option) ? modelOption : null;
+    return {
+      type: SEO_TYPE_CARS,
+      page: 1,
+      make,
+      model,
+      partMake: null,
+      state: null,
+      filters: {
+        [CATEGORY_PARAM]: CARS_CATEGORY_ID,
+        ...(make ? { [MAKE_PARAM]: make.option } : {}),
+        ...(model ? { [MODEL_PARAM]: model.option } : {}),
+      },
+    };
+  }
+
+  if (category === PARTS_CATEGORY_ID) {
+    const partMake = findOption(
+      listingFields,
+      PART_MAKE_FIELD_KEY,
+      singleValue(publicData[PART_MAKE_FIELD_KEY])
+    );
+    return {
+      type: SEO_TYPE_PARTS,
+      page: 1,
+      make: null,
+      model: null,
+      partMake,
+      state: null,
+      filters: {
+        [CATEGORY_PARAM]: PARTS_CATEGORY_ID,
+        ...(partMake ? { [PART_MAKE_PARAM]: partMake.option } : {}),
+      },
+    };
+  }
+
+  return null;
 };

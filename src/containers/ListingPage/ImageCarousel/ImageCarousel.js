@@ -32,12 +32,13 @@ const IMAGE_GALLERY_OPTIONS = {
  * @param {string} [props.rootClassName] - Custom class that overrides the default class for the root element
  * @param {Array<propTypes.image>} props.images - The images
  * @param {Array<string>} props.imageVariants - The image variants
+ * @param {number} [props.startIndex] - The image shown first (default 0)
  * @returns {JSX.Element} image carousel component
  */
 const ImageCarousel = props => {
-  const [currentIndex, setIndex] = useState(0);
+  const { rootClassName, className, images, imageVariants, startIndex = 0 } = props;
+  const [currentIndex, setIndex] = useState(startIndex);
   const intl = useIntl();
-  const { rootClassName, className, images, imageVariants } = props;
 
   const items = images.map((img, i) => {
     return {
@@ -69,7 +70,12 @@ const ImageCarousel = props => {
 
   const renderLeftNav = (onClick, disabled) => {
     return (
-      <button className={css.navLeft} disabled={disabled} onClick={onClick}>
+      <button
+        className={css.navLeft}
+        disabled={disabled}
+        onClick={onClick}
+        aria-label={intl.formatMessage({ id: 'ImageCarousel.previousImage' })}
+      >
         <div className={css.navArrowWrapper}>
           <IconArrowHead direction="left" size="big" className={css.arrowHead} />
         </div>
@@ -78,7 +84,12 @@ const ImageCarousel = props => {
   };
   const renderRightNav = (onClick, disabled) => {
     return (
-      <button className={css.navRight} disabled={disabled} onClick={onClick}>
+      <button
+        className={css.navRight}
+        disabled={disabled}
+        onClick={onClick}
+        aria-label={intl.formatMessage({ id: 'ImageCarousel.nextImage' })}
+      >
         <div className={css.navArrowWrapper}>
           <IconArrowHead direction="right" size="big" className={css.arrowHead} />
         </div>

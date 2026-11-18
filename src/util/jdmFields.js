@@ -151,3 +151,67 @@ export const getJdmCardDetails = (publicData = {}, listingFields = [], formatOdo
 
   return { heading, meta };
 };
+
+export const TRANSMISSION_FIELD_KEY = 'transmission';
+export const BODY_TYPE_FIELD_KEY = 'body_type';
+export const DRIVE_TYPE_FIELD_KEY = 'drive_type';
+
+// Specs of the listing page, in the order of the design: Make, Model, Year and Location, then
+// Transmission, Body type, Drive type and Odometer. Parts have Make, Year, Location and Condition.
+const CAR_SPEC_KEYS = [
+  MAKE_FIELD_KEY,
+  MODEL_FIELD_KEY,
+  YEAR_FIELD_KEY,
+  STATE_FIELD_KEY,
+  TRANSMISSION_FIELD_KEY,
+  BODY_TYPE_FIELD_KEY,
+  DRIVE_TYPE_FIELD_KEY,
+  ODOMETER_FIELD_KEY,
+];
+const PART_SPEC_KEYS = [PART_MAKE_FIELD_KEY, YEAR_FIELD_KEY, STATE_FIELD_KEY, CONDITION_FIELD_KEY];
+
+const hasValue = value => value != null && `${value}`.trim() !== '';
+
+/**
+ * Specs of a JDM listing for the listing page. Enum values are shown with their labels, the
+ * odometer is formatted with formatOdometer and, with Others / Other Models, the make and model
+ * typed in by the seller are shown. Fields without a value are left out.
+ *
+ * @param {Object} publicData listing public data
+ * @param {Array<Object>} listingFields config.listing.listingFields
+ * @param {Function} formatOdometer formats the odometer number, e.g. 85000 => "85,000 km"
+ * @returns {Array<{ key: string, value: string }>} empty for listings without a make
+ */
+export const getJdmListingSpecs = (publicData = {}, listingFields = [], formatOdometer) => {
+  const carMake = publicData[MAKE_FIELD_KEY];
+  const partMake = publicData[PART_MAKE_FIELD_KEY];
+  if (!carMake && !partMake) {
+    return [];
+  }
+  const model = carMake ? publicData[MODEL_FIELD_KEY] : null;
+  const makeOther = `${publicData[MAKE_OTHER_FIELD_KEY] || ''}`.trim();
+  const modelOther = `${publicData[MODEL_OTHER_FIELD_KEY] || ''}`.trim();
+
+  const valueOf = key => {
+    const value = publicData[key];
+    if (key === MAKE_FIELD_KEY && needsMakeOther(carMake) && makeOther) {
+      return makeOther;
+    }
+    if (key === MODEL_FIELD_KEY && needsModelOther(carMake, model) && modelOther) {
+      return modelOther;
+    }
+    if (!hasValue(value)) {
+      return null;
+    }
+    if (key === ODOMETER_FIELD_KEY) {
+      return formatOdometer ? formatOdometer(value) : `${value}`;
+    }
+    if (key === YEAR_FIELD_KEY) {
+      return `${value}`;
+    }
+    return enumLabel(listingFields, key, value) || `${value}`;
+  };
+
+  const keys = carMake ? CAR_SPEC_KEYS : PART_SPEC_KEYS;
+  return keys.map(key => ({ key, value: valueOf(key) })).filter(spec => hasValue(spec.value));
+};

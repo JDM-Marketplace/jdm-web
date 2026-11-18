@@ -1,6 +1,8 @@
 import {
   jdmSeoCanonicalPath,
+  jdmSeoBasePath,
   jdmSeoLocationFromSearchParams,
+  jdmSeoPageForListing,
   jdmSeoPageMeta,
   jdmSeoUrlForSearch,
   parseJdmSeoPath,
@@ -293,5 +295,56 @@ describe('jdmSeoPageMeta', () => {
       'title|state.vic.heading|pageSuffix|2|JDM Marketplace'
     );
     expect(meta('vic', []).title).toEqual('title|state.vic.heading|JDM Marketplace');
+  });
+});
+
+describe('jdmSeoPageForListing', () => {
+  it('returns the make and model page of a car', () => {
+    const page = jdmSeoPageForListing(
+      { categoryLevel1: 'jdm-cars', make: 'nissan', model: 'nissan-silvia', state: 'vic' },
+      listingFields
+    );
+    expect(page.filters).toEqual({
+      pub_categoryLevel1: 'jdm-cars',
+      pub_make: 'nissan',
+      pub_model: 'nissan-silvia',
+    });
+    expect(jdmSeoBasePath(page)).toEqual('/jdm-cars/nissan/silvia/');
+    expect(jdmSeoBasePath({ ...page, model: null })).toEqual('/jdm-cars/nissan/');
+    expect(jdmSeoPageMeta(page, intl, 'JDM Marketplace').breadcrumbs.map(b => b.path)).toEqual([
+      '/',
+      '/jdm-cars/',
+      '/jdm-cars/nissan/',
+      '/jdm-cars/nissan/silvia/',
+    ]);
+  });
+
+  it('drops models that have no page under the make', () => {
+    const other = jdmSeoPageForListing(
+      { categoryLevel1: 'jdm-cars', make: 'other', model: 'nissan-silvia' },
+      listingFields
+    );
+    expect(other.filters).toEqual({ pub_categoryLevel1: 'jdm-cars', pub_make: 'other' });
+    expect(jdmSeoBasePath(other)).toEqual('/jdm-cars/other-models/');
+    const mismatch = jdmSeoPageForListing(
+      { categoryLevel1: 'jdm-cars', make: 'toyota', model: 'nissan-silvia' },
+      listingFields
+    );
+    expect(mismatch.model).toBeNull();
+  });
+
+  it('returns the part make page of a part', () => {
+    const page = jdmSeoPageForListing(
+      { categoryLevel1: 'jdm-parts', part_make: 'universal' },
+      listingFields
+    );
+    expect(page.filters).toEqual({ pub_categoryLevel1: 'jdm-parts', pub_part_make: 'universal' });
+    expect(jdmSeoBasePath(page)).toEqual('/jdm-parts/universal/');
+  });
+
+  it('returns null outside the JDM categories', () => {
+    expect(jdmSeoPageForListing({ categoryLevel1: 'cat', make: 'nissan' }, listingFields)).toBe(
+      null
+    );
   });
 });

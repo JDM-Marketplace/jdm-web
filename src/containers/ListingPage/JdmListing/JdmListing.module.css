@@ -1,0 +1,407 @@
+@import '../../../styles/customMediaQueries.css';
+
+/*
+ * JDM listing page (Miro "Listing Ad Page Template"): one white 1188px column like the search
+ * page, with the breadcrumbs and h1, photos, the red-bordered price box, Specs, the description
+ * and Similar Listings.
+ */
+.root {
+  width: 100%;
+  max-width: 1188px;
+  margin: 0 auto;
+  padding: 0 24px 64px 24px;
+
+  @media (--viewportMedium) {
+    padding: 0 24px 80px 24px;
+  }
+}
+
+.header {
+  padding: 20px 0 16px 0;
+
+  @media (--viewportMedium) {
+    padding: 24px 0 20px 0;
+  }
+
+  /* The listing title is bigger than a search page heading (Miro) */
+  & .title {
+    font-size: 26px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+
+    @media (--viewportMedium) {
+      font-size: 34px;
+    }
+  }
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ================ Price box ================ */
+
+.priceBox {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid var(--marketplaceColor);
+  border-radius: var(--borderRadiusMedium);
+  background-color: var(--colorWhite);
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    margin-top: 24px;
+    padding: 24px 32px;
+  }
+}
+
+.price {
+  margin: 0;
+  padding: 0;
+  color: var(--colorGrey900);
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: var(--fontWeightBlack);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+
+  @media (--viewportMedium) {
+    font-size: 36px;
+  }
+}
+
+.sellerAndAction {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (--viewportMedium) {
+    align-items: flex-end;
+    gap: 12px;
+  }
+}
+
+.seller {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sellerAvatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.sellerText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sellerLabel {
+  color: var(--colorGrey700);
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: var(--fontWeightMedium);
+}
+
+.sellerName {
+  color: var(--colorGrey900);
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: var(--fontWeightBold);
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--marketplaceColor);
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  @media (--viewportMedium) {
+    align-items: flex-end;
+  }
+}
+
+.messageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 16px;
+  line-height: 1.2;
+
+  @media (--viewportMedium) {
+    width: auto;
+    min-width: 220px;
+  }
+}
+
+.messageIcon {
+  flex-shrink: 0;
+  /* Buttons fill their icons; this one is an outline */
+  fill: none;
+}
+
+.actionNote {
+  margin: 0;
+  padding: 0;
+  color: var(--colorGrey700);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* ================ Specs and description ================ */
+
+.section {
+  margin-top: 40px;
+
+  @media (--viewportMedium) {
+    margin-top: 48px;
+  }
+}
+
+.sectionHeading {
+  margin: 0 0 16px 0;
+  padding: 0;
+  color: var(--colorGrey900);
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: var(--fontWeightBold);
+  letter-spacing: -0.01em;
+
+  @media (--viewportMedium) {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+}
+
+.specs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  /* Two columns filled top to bottom: Make, Model, Year, Location | Transmission... */
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(var(--specRows, 4), auto);
+    grid-auto-flow: column;
+    gap: 14px 48px;
+    max-width: 760px;
+  }
+}
+
+.spec {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+.specLabel {
+  color: var(--colorGrey600);
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: var(--fontWeightSemiBold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.specValue {
+  color: var(--colorGrey900);
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: var(--fontWeightMedium);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.specLink {
+  composes: specValue;
+  color: var(--marketplaceColor);
+  font-weight: var(--fontWeightSemiBold);
+  text-decoration: underline;
+  text-decoration-thickness: from-font;
+  text-underline-offset: 3px;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--marketplaceColorDark);
+    }
+  }
+}
+
+.description {
+  max-width: 70ch;
+  margin: 0;
+  padding: 0;
+  color: var(--colorGrey800);
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: var(--fontWeightRegular);
+  white-space: pre-line;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+}
+
+.longWord {
+  word-break: break-word;
+}
+
+/* ================ Similar listings ================ */
+
+.similarSection {
+  margin-top: 48px;
+  padding-top: 40px;
+  border-top: 1px solid var(--colorGrey100);
+
+  @media (--viewportMedium) {
+    margin-top: 64px;
+    padding-top: 48px;
+  }
+}
+
+.similarHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.similarHeading {
+  composes: sectionHeading;
+  margin: 0;
+}
+
+.seeAllLink {
+  color: var(--marketplaceColor);
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: var(--fontWeightSemiBold);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  text-wrap: balance;
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
+.similarGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (--viewportMedium) {
+    gap: 24px 16px;
+  }
+
+  @media (--viewportLarge) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 32px 24px;
+  }
+}
+
+.similarItem {
+  display: flex;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+
+  & > * {
+    width: 100%;
+  }
+}
+
+/* Same footprint as a card: a 4:3 photo plus its details */
+.similarPlaceholder {
+  aspect-ratio: 3 / 4;
+  border-radius: var(--borderRadiusMedium);
+  background-color: var(--colorGrey50);
+  border: 1px solid var(--colorGrey100);
+}
+
+.similarMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.similarMessageText {
+  margin: 0;
+  padding: 0;
+  color: var(--colorGrey700);
+  font-size: 16px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.retryButton {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--colorGrey300);
+  border-radius: var(--borderRadiusMedium);
+  background-color: var(--colorWhite);
+  color: var(--colorGrey900);
+  font-size: 15px;
+  font-weight: var(--fontWeightSemiBold);
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--colorGrey50);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--marketplaceColor);
+    outline-offset: 2px;
+  }
+}

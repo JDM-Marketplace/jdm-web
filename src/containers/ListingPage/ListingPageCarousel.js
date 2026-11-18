@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import classNames from 'classnames';
 
@@ -7,6 +6,9 @@ import classNames from 'classnames';
 import { FormattedMessage } from '../../util/reactIntl';
 import { LISTING_STATE_CLOSED, propTypes } from '../../util/types';
 import { OFFER, REQUEST } from '../../transactions/transaction';
+import { denormalisedEntities } from '../../util/data';
+import { jdmSeoPageForListing } from '../../util/jdmSearchUrls';
+import { createResourceLocatorString } from '../../util/routes';
 
 // Global ducks (for Redux actions and thunks)
 import { getMarketplaceEntities } from '../../ducks/marketplaceData.duck';
@@ -35,6 +37,7 @@ import {
   setInitialValues,
   fetchTimeSlots,
   fetchTransactionLineItems,
+  fetchSimilarListings,
 } from './ListingPage.duck';
 
 import {
@@ -55,6 +58,7 @@ import SectionMapMaybe from './SectionMapMaybe';
 import SectionGallery from './SectionGallery';
 import CustomListingFields from './CustomListingFields';
 import ListingPageAccessWrapper from './ListingPageAccessWrapper';
+import JdmListingContent from './JdmListing/JdmListingContent';
 
 import css from './ListingPage.module.css';
 
@@ -92,6 +96,8 @@ export const ListingPageComponent = props => {
     config,
     routeConfiguration,
     showOwnListingsOnly,
+    similarListings,
+    onFetchSimilarListings,
     ...restOfProps
   } = props;
 
@@ -212,6 +218,84 @@ export const ListingPageComponent = props => {
     }
   };
 
+  // JDM cars and parts (inquiry listings) get the Miro listing page; other listings keep the
+  // template's carousel layout.
+  const jdmSeoPage = jdmSeoPageForListing(publicData, listingConfig.listingFields);
+  const showJdmLayout = !!jdmSeoPage && processType === 'inquiry';
+
+  const notifications = actionBarClassName => (
+    <Notifications
+      mounted={mounted}
+      listing={currentListing}
+      isOwnListing={isOwnListing}
+      noPayoutDetailsSetWithOwnListing={noPayoutDetailsSetWithOwnListing}
+      currentUser={currentUser}
+      className={actionBarClassName}
+      editParams={{
+        id: listingId.uuid,
+        slug: listingSlug,
+        type: listingPathParamType,
+        tab: listingTab,
+      }}
+    />
+  );
+
+  const productSchema = {
+    '@context': 'http://schema.org',
+    '@type': 'Product',
+    description: description,
+    name: schemaTitle,
+    image: schemaImages,
+    offers: {
+      '@type': 'Offer',
+      url: productURL,
+      ...priceForSchemaMaybe(price),
+      ...availabilityMaybe,
+    },
+  };
+
+  if (showJdmLayout) {
+    const listingPath = createResourceLocatorString(
+      isVariant ? 'ListingPageVariant' : 'ListingPage',
+      routeConfiguration,
+      params,
+      {}
+    );
+    return (
+      <Page
+        title={schemaTitle}
+        scrollingDisabled={scrollingDisabled}
+        author={authorDisplayName}
+        description={description}
+        facebookImages={facebookImages}
+        twitterImages={twitterImages}
+        {...noIndexMaybe}
+        schema={productSchema}
+      >
+        <LayoutSingleColumn
+          className={css.jdmPageRoot}
+          topbar={topbar}
+          footer={<FooterContainer />}
+        >
+          <JdmListingContent
+            listing={currentListing}
+            seoPage={jdmSeoPage}
+            listingPath={listingPath}
+            config={config}
+            actionBar={notifications(css.jdmActionBar)}
+            author={ensuredAuthor}
+            authorDisplayName={authorDisplayName}
+            isOwnListing={isOwnListing}
+            onMessageSeller={() => handleOrderSubmit({})}
+            onManageDisableScrolling={onManageDisableScrolling}
+            similarListings={similarListings}
+            onFetchSimilarListings={onFetchSimilarListings}
+          />
+        </LayoutSingleColumn>
+      </Page>
+    );
+  }
+
   return (
     <Page
       title={schemaTitle}
@@ -221,37 +305,12 @@ export const ListingPageComponent = props => {
       facebookImages={facebookImages}
       twitterImages={twitterImages}
       {...noIndexMaybe}
-      schema={{
-        '@context': 'http://schema.org',
-        '@type': 'Product',
-        description: description,
-        name: schemaTitle,
-        image: schemaImages,
-        offers: {
-          '@type': 'Offer',
-          url: productURL,
-          ...priceForSchemaMaybe(price),
-          ...availabilityMaybe,
-        },
-      }}
+      schema={productSchema}
     >
       <LayoutSingleColumn className={css.pageRoot} topbar={topbar} footer={<FooterContainer />}>
         <div className={css.contentWrapperForProductLayout}>
           <div className={css.mainColumnForProductLayout}>
-            <Notifications
-              mounted={mounted}
-              listing={currentListing}
-              isOwnListing={isOwnListing}
-              noPayoutDetailsSetWithOwnListing={noPayoutDetailsSetWithOwnListing}
-              currentUser={currentUser}
-              className={css.actionBarForProductLayout}
-              editParams={{
-                id: listingId.uuid,
-                slug: listingSlug,
-                type: listingPathParamType,
-                tab: listingTab,
-              }}
-            />
+            {notifications(css.actionBarForProductLayout)}
             {showListingImage && (
               <SectionGallery
                 listing={currentListing}
@@ -397,7 +456,31 @@ const ListingPage = props => {
     fetchLineItemsInProgress,
     fetchLineItemsError,
     inquiryModalOpenForListingId,
+    similarListingsForId,
+    similarListingIds,
+    similarListingsInProgress,
+    similarListingsError,
   } = useSelector(state => state.ListingPage);
+  const entities = useSelector(state => state.marketplaceData.entities);
+  const similarListings = useMemo(
+    () => ({
+      listings: denormalisedEntities(
+        entities,
+        (similarListingIds || []).map(id => ({ id, type: 'listing' })),
+        false
+      ),
+      fetchedForId: similarListingsForId,
+      inProgress: similarListingsInProgress,
+      error: similarListingsError,
+    }),
+    [
+      entities,
+      similarListingIds,
+      similarListingsForId,
+      similarListingsInProgress,
+      similarListingsError,
+    ]
+  );
   const currentUser = useSelector(state => state.user?.currentUser);
   const scrollingDisabled = useSelector(state => isScrollingDisabled(state));
 
@@ -440,6 +523,10 @@ const ListingPage = props => {
   const onInitializeCardPaymentData = useCallback(() => dispatch(initializeCardPaymentData()), [
     dispatch,
   ]);
+  const onFetchSimilarListings = useCallback(
+    (listing, config) => dispatch(fetchSimilarListings(listing, config)),
+    [dispatch]
+  );
   const onFetchTimeSlots = useCallback(
     (listingId, start, end, timeZone, options) =>
       dispatch(fetchTimeSlots(listingId, start, end, timeZone, options)),
@@ -472,6 +559,8 @@ const ListingPage = props => {
       onSendInquiry={onSendInquiry}
       onInitializeCardPaymentData={onInitializeCardPaymentData}
       onFetchTimeSlots={onFetchTimeSlots}
+      similarListings={similarListings}
+      onFetchSimilarListings={onFetchSimilarListings}
     />
   );
 };

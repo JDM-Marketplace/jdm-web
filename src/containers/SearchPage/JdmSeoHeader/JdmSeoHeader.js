@@ -26,16 +26,18 @@ export const breadcrumbListSchema = (breadcrumbs, marketplaceRootURL) => ({
 
 /**
  * Breadcrumbs and page heading of an SEO search page ("Home > JDM Cars > Nissan > Silvia").
+ * The listing page uses it too, with the listing title as the heading and the last crumb.
  *
  * @component
  * @param {Object} props
  * @param {string} [props.className]
+ * @param {string} [props.headingClassName] extends the h1 styles
  * @param {string} props.heading e.g. "Nissan Silvia for sale in Australia"
  * @param {Array<{ label: string, path: string }>} props.breadcrumbs the last one is this page
  * @returns {JSX.Element}
  */
 const JdmSeoHeader = props => {
-  const { className, heading, breadcrumbs = [] } = props;
+  const { className, headingClassName, heading, breadcrumbs = [] } = props;
   const intl = useIntl();
   const lastIndex = breadcrumbs.length - 1;
 
@@ -58,7 +60,7 @@ const JdmSeoHeader = props => {
           ))}
         </ol>
       </nav>
-      <h1 className={css.heading}>{heading}</h1>
+      <h1 className={classNames(css.heading, headingClassName)}>{heading}</h1>
     </header>
   );
 };

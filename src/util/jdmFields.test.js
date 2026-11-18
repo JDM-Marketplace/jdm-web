@@ -1,4 +1,9 @@
-import { clearUnusedOtherFields, getJdmCardDetails, modelOptionsForMake } from './jdmFields';
+import {
+  clearUnusedOtherFields,
+  getJdmCardDetails,
+  getJdmListingSpecs,
+  modelOptionsForMake,
+} from './jdmFields';
 
 const listingFields = [
   {
@@ -13,6 +18,9 @@ const listingFields = [
     ],
   },
   { key: 'condition', enumOptions: [{ option: 'used-good', label: 'Used – Good' }] },
+  { key: 'state', enumOptions: [{ option: 'vic', label: 'Victoria' }] },
+  { key: 'transmission', enumOptions: [{ option: 'manual', label: 'Manual' }] },
+  { key: 'drive_type', enumOptions: [{ option: 'rwd', label: 'RWD' }] },
 ];
 const formatOdometer = km => `${km.toLocaleString('en-AU')} km`;
 
@@ -109,5 +117,59 @@ describe('modelOptionsForMake', () => {
     expect(modelOptionsForMake(listingFields[1].enumOptions, 'toyota')).toEqual([
       { option: 'toyota-supra', label: 'Supra' },
     ]);
+  });
+});
+
+describe('getJdmListingSpecs', () => {
+  it('lists car specs in the order of the design, with labels and the odometer', () => {
+    const specs = getJdmListingSpecs(
+      {
+        make: 'nissan',
+        model: 'nissan-skyline',
+        year: 1999,
+        state: 'vic',
+        transmission: 'manual',
+        drive_type: 'rwd',
+        odometer: 85000,
+      },
+      listingFields,
+      formatOdometer
+    );
+    expect(specs).toEqual([
+      { key: 'make', value: 'Nissan' },
+      { key: 'model', value: 'Skyline' },
+      { key: 'year', value: '1999' },
+      { key: 'state', value: 'Victoria' },
+      { key: 'transmission', value: 'Manual' },
+      { key: 'drive_type', value: 'RWD' },
+      { key: 'odometer', value: '85,000 km' },
+    ]);
+  });
+
+  it('shows the make and model typed in by the seller', () => {
+    const typed = { make: 'other', make_other: ' Isuzu ', model_other: 'Gemini' };
+    expect(getJdmListingSpecs(typed, listingFields, formatOdometer)).toEqual([
+      { key: 'make', value: 'Isuzu' },
+      { key: 'model', value: 'Gemini' },
+    ]);
+    const otherModel = { make: 'nissan', model: 'nissan-other-models', model_other: 'Laurel' };
+    expect(getJdmListingSpecs(otherModel, listingFields, formatOdometer)[1]).toEqual({
+      key: 'model',
+      value: 'Laurel',
+    });
+  });
+
+  it('lists make, year, location and condition for parts', () => {
+    const specs = getJdmListingSpecs(
+      { part_make: 'universal', year: 2010, state: 'vic', condition: 'used-good', odometer: 5 },
+      listingFields,
+      formatOdometer
+    );
+    expect(specs.map(s => s.key)).toEqual(['part_make', 'year', 'state', 'condition']);
+    expect(specs[3].value).toEqual('Used – Good');
+  });
+
+  it('returns nothing for listings without a make', () => {
+    expect(getJdmListingSpecs({ year: 2001 }, listingFields, formatOdometer)).toEqual([]);
   });
 });

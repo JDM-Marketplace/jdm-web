@@ -835,3 +835,18 @@
   width: 100%;
   height: 100%;
 }
+
+/* JDM listing page: white edge to edge like the search page (Miro) */
+.jdmPageRoot {
+  background-color: var(--colorWhite);
+}
+
+.jdmActionBar {
+  width: 100%;
+  margin: 16px 0 0 0;
+  border-radius: var(--borderRadiusMedium);
+
+  @media (--viewportMedium) {
+    margin-top: 24px;
+  }
+}
