@@ -127,3 +127,79 @@
   word-break: break-word;
   hyphens: auto;
 }
+
+/* =====================================================================
+   JDM listing card (listings with a make): white card, details below
+   the photo in the order of the design.
+   ===================================================================== */
+.jdmCard {
+  overflow: hidden;
+  background-color: var(--colorWhite);
+  border: 1px solid var(--colorGrey100);
+  border-radius: var(--borderRadiusMedium);
+
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: var(--boxShadowListingCard, 0 8px 24px rgb(0 0 0 / 10%));
+    }
+  }
+}
+
+.jdmInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 12px 12px;
+}
+
+.jdmHeading {
+  font-weight: var(--fontWeightMedium);
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--colorGrey900);
+  overflow-wrap: anywhere;
+}
+
+.jdmTitle {
+  font-weight: var(--fontWeightBold);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--marketplaceColor);
+
+  /* Two lines at most; the full title is on the listing page */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.jdmPrice {
+  margin-top: 6px;
+  font-weight: var(--fontWeightBlack);
+  font-size: 18px;
+  line-height: 1.3;
+  color: var(--colorGrey900);
+  font-variant-numeric: tabular-nums;
+}
+
+.jdmMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--colorGrey700);
+  font-variant-numeric: tabular-nums;
+}
+
+.jdmMetaSeparator {
+  color: var(--colorGrey500);
+}
+
+.jdmAuthor {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--colorGrey700);
+}

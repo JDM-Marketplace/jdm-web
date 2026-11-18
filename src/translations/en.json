@@ -1589,5 +1589,22 @@
   "ListingSubmittedPage.heading": "We'll take care of the rest!",
   "ListingSubmittedPage.postAnother": "Post another ad",
   "ListingSubmittedPage.preview": "Preview your ad",
-  "ListingSubmittedPage.schemaTitle": "Ad submitted"
+  "ListingSubmittedPage.schemaTitle": "Ad submitted",
+  "HeroListingSearch.ariaLabel": "Search JDM listings",
+  "HeroListingSearch.makeLabel": "Make",
+  "HeroListingSearch.modelLabel": "Model",
+  "HeroListingSearch.locationLabel": "Location",
+  "HeroListingSearch.priceLabel": "Price range",
+  "HeroListingSearch.allMakes": "All makes",
+  "HeroListingSearch.allModels": "All models",
+  "HeroListingSearch.selectMakeFirst": "Select a make first",
+  "HeroListingSearch.allStates": "All states",
+  "HeroListingSearch.anyPrice": "Any price",
+  "HeroListingSearch.priceUnder": "Under {max}",
+  "HeroListingSearch.priceBetween": "{min} – {max}",
+  "HeroListingSearch.priceOver": "{min}+",
+  "HeroListingSearch.submit": "Search JDM",
+  "TopbarDesktop.sellCta": "Sell Your Car, it's Free!",
+  "TopbarDesktop.unreadMessages": ", {count, plural, one {# unread message} other {# unread messages}}",
+  "ListingCard.odometer": "{km} km"
 }

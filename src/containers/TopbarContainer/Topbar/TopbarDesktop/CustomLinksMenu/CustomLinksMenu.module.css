@@ -1,7 +1,7 @@
 .customLinksMenu {
   flex-grow: 1;
   display: flex;
-  justify-content: right;
+  justify-content: flex-start;
   height: 100%;
 }
 .layoutPending {
@@ -9,6 +9,6 @@
 }
 .createListingLinkOnly {
   display: flex;
-  justify-content: right;
+  justify-content: flex-start;
   height: 100%;
 }

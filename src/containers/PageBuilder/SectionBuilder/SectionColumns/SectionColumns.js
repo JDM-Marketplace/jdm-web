@@ -7,7 +7,11 @@ import Field, { hasDataInFields } from '../../Field';
 import BlockBuilder from '../../BlockBuilder';
 
 import SectionContainer from '../SectionContainer';
+import FaqAccordion from './FaqAccordion';
 import css from './SectionColumns.module.css';
+
+// JDM: the columns section with anchor ID "faq" (set in Console) is shown as an accordion.
+const FAQ_SECTION_ID = 'faq';
 
 // The number of columns (numColumns) affects styling and responsive images
 const COLUMN_CONFIG = [
@@ -85,6 +89,7 @@ const SectionColumns = props => {
 
   const hasHeaderFields = hasDataInFields([title, description, callToAction], fieldOptions);
   const hasBlocks = blocks?.length > 0;
+  const isFaqSection = sectionId === FAQ_SECTION_ID;
 
   return (
     <SectionContainer
@@ -103,17 +108,23 @@ const SectionColumns = props => {
       ) : null}
       {hasBlocks ? (
         <div
-          className={classNames(defaultClasses.blockContainer, getColumnCSS(numColumns), {
+          className={classNames(defaultClasses.blockContainer, {
+            [getColumnCSS(numColumns)]: !isFaqSection,
+            [css.faqContainer]: isFaqSection,
             [css.noSidePaddings]: isInsideContainer,
           })}
         >
-          <BlockBuilder
-            ctaButtonClass={defaultClasses.ctaButton}
-            blocks={blocks}
-            sectionId={sectionId}
-            responsiveImageSizes={getResponsiveImageSizes(numColumns)}
-            options={options}
-          />
+          {isFaqSection ? (
+            <FaqAccordion blocks={blocks} options={fieldOptions} />
+          ) : (
+            <BlockBuilder
+              ctaButtonClass={defaultClasses.ctaButton}
+              blocks={blocks}
+              sectionId={sectionId}
+              responsiveImageSizes={getResponsiveImageSizes(numColumns)}
+              options={options}
+            />
+          )}
         </div>
       ) : null}
     </SectionContainer>

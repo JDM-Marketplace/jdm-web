@@ -13,6 +13,7 @@ import { isUploadImageOverLimitError } from '../../../../util/errors';
 import { formatMoney } from '../../../../util/currency';
 import { types as sdkTypes } from '../../../../util/sdkLoader';
 import * as validators from '../../../../util/validators';
+import { modelOptionsForMake } from '../../../../util/jdmFields';
 
 // Import shared components
 import {
@@ -52,15 +53,7 @@ const messageOrNull = (intl, id, values) =>
 const namespacedKey = fieldConfig =>
   fieldConfig.scope === 'private' ? `priv_${fieldConfig.key}` : `pub_${fieldConfig.key}`;
 
-// Model options are tied to a make by their id prefix: "nissan-skyline" belongs to "nissan".
-// If a make has no prefixed models (e.g. a new make added in Console), all models are shown.
-export const modelOptionsForMake = (enumOptions = [], make) => {
-  if (!make) {
-    return [];
-  }
-  const forMake = enumOptions.filter(o => `${o.option}`.startsWith(`${make}-`));
-  return forMake.length > 0 ? forMake : enumOptions;
-};
+export { modelOptionsForMake };
 
 const yearOptions = (minimum = 1950, maximum) => {
   const nextYear = new Date().getFullYear() + 1;

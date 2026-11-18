@@ -1,0 +1,82 @@
+@import '../../../../styles/customMediaQueries.css';
+
+.root {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  text-align: start;
+
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  @media (--viewportLarge) {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    align-items: end;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.label {
+  margin: 0;
+  padding: 0;
+  font-weight: var(--fontWeightSemiBold);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--colorGrey700);
+}
+
+.fieldDisabled .label {
+  color: var(--colorGrey500);
+}
+
+.select {
+  width: 100%;
+  height: 48px;
+  padding: 0 40px 0 14px;
+  margin: 0;
+
+  font-size: 16px;
+  color: var(--colorGrey700);
+  background-color: var(--colorWhite);
+  border: 1px solid var(--colorGrey300);
+  border-radius: var(--borderRadiusMedium);
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    color: var(--colorGrey500);
+    background-color: var(--colorGrey50);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--marketplaceColor);
+    outline-offset: 2px;
+  }
+}
+
+.submit {
+  composes: buttonPrimary from global;
+  min-height: 48px;
+  height: 48px;
+  padding: 0 28px;
+  white-space: nowrap;
+
+  @media (--viewportMedium) {
+    grid-column: 1 / -1;
+  }
+
+  @media (--viewportLarge) {
+    grid-column: auto;
+    width: auto;
+  }
+}

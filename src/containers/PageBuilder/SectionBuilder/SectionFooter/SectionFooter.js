@@ -3,8 +3,6 @@ import classNames from 'classnames';
 
 import { pickFieldOptions } from '../../PageBuilder.helpers';
 
-import { LinkedLogo } from '../../../../components';
-
 import Field from '../../Field';
 import BlockBuilder from '../../BlockBuilder';
 
@@ -19,14 +17,8 @@ const GRID_CONFIG = [
   { contentCss: css.contentCol3, gridCss: css.gridCol3 },
   { contentCss: css.contentCol4, gridCss: css.gridCol4 },
 ];
-const MAX_MOBILE_SCREEN_WIDTH = 1024;
 
 const getIndex = numberOfColumns => numberOfColumns - 1;
-
-const getContentCss = numberOfColumns => {
-  const contentConfig = GRID_CONFIG[getIndex(numberOfColumns)];
-  return contentConfig ? contentConfig.contentCss : GRID_CONFIG[0].contentCss;
-};
 
 const getGridCss = numberOfColumns => {
   const contentConfig = GRID_CONFIG[getIndex(numberOfColumns)];
@@ -72,6 +64,10 @@ const getGridCss = numberOfColumns => {
  * @param {Object<string,FieldComponentConfig>?} props.options.fieldComponents custom fields
  * @returns {JSX.Element} Section for article content
  */
+// JDM: a footer block with this ID holds extra social links (e.g. Reddit, which Console's
+// social media links don't offer). It's shown next to the social icons, not as a column.
+const EXTRA_SOCIAL_BLOCK_ID = 'footer-social';
+
 const SectionFooter = props => {
   const {
     sectionId,
@@ -79,12 +75,10 @@ const SectionFooter = props => {
     rootClassName,
     numberOfColumns = 1,
     socialMediaLinks = [],
-    slogan,
     appearance,
     copyright,
     blocks = [],
     options,
-    linkLogoToExternalSite,
   } = props;
 
   // If external mapping has been included for fields
@@ -96,16 +90,13 @@ const SectionFooter = props => {
       blockId: sml.link.platform,
     };
   });
+  const extraSocialBlocks = blocks.filter(b => b.blockId === EXTRA_SOCIAL_BLOCK_ID);
+  const columnBlocks = blocks.filter(b => b.blockId !== EXTRA_SOCIAL_BLOCK_ID);
 
-  const showSocialMediaLinks = socialMediaLinks?.length > 0;
-  const hasMatchMedia = typeof window !== 'undefined' && window?.matchMedia;
-  const isMobileLayout = hasMatchMedia
-    ? window.matchMedia(`(max-width: ${MAX_MOBILE_SCREEN_WIDTH}px)`)?.matches
-    : true;
-  const logoLayout = isMobileLayout ? 'mobile' : 'desktop';
+  const showSocialMediaLinks = socialMediaLinks?.length > 0 || extraSocialBlocks.length > 0;
 
-  // use block builder instead of mapping blocks manually
-
+  // JDM design: no logo or slogan, the link columns first and the social links and
+  // copyright in a row below them.
   return (
     <SectionContainer
       as="footer"
@@ -115,34 +106,28 @@ const SectionFooter = props => {
       appearance={appearance}
       options={fieldOptions}
     >
-      <div className={css.footer}>
-        <div className={classNames(css.content, getContentCss(numberOfColumns))}>
-          <div>
-            <LinkedLogo
-              rootClassName={css.logoLink}
-              logoClassName={css.logoWrapper}
-              logoImageClassName={css.logoImage}
-              linkToExternalSite={linkLogoToExternalSite}
-              layout={logoLayout}
-            />
-          </div>
-          <div className={css.sloganMobile}>
-            <Field data={slogan} className={css.slogan} />
-          </div>
-          <div className={css.detailsInfo}>
-            <div className={css.sloganDesktop}>
-              <Field data={slogan} className={css.slogan} />
-            </div>
-            {showSocialMediaLinks ? (
+      <div className={css.jdmFooter}>
+        <div className={classNames(css.jdmColumns, getGridCss(numberOfColumns))}>
+          <BlockBuilder blocks={columnBlocks} sectionId={sectionId} options={options} />
+        </div>
+        <div className={css.jdmBottom}>
+          {showSocialMediaLinks ? (
+            <div className={css.jdmSocial}>
               <div className={css.icons}>
                 <BlockBuilder blocks={linksWithBlockId} sectionId={sectionId} options={options} />
               </div>
-            ) : null}
-            <Field data={copyright} className={css.copyright} />
-          </div>
-          <div className={classNames(css.grid, getGridCss(numberOfColumns))}>
-            <BlockBuilder blocks={blocks} sectionId={sectionId} options={options} />
-          </div>
+              {extraSocialBlocks.length > 0 ? (
+                <div className={css.jdmExtraSocial}>
+                  <BlockBuilder
+                    blocks={extraSocialBlocks}
+                    sectionId={sectionId}
+                    options={options}
+                  />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          <Field data={copyright} className={css.copyright} />
         </div>
       </div>
     </SectionContainer>

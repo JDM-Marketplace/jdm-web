@@ -40,17 +40,65 @@ const LoginLink = () => {
   );
 };
 
-const InboxLink = ({ notificationCount, inboxTab }) => {
+// JDM: "Sign up / Log in" as one group, like the design
+const AuthLinks = () => (
+  <div className={css.authLinks}>
+    <SignupLink />
+    <span className={css.authSeparator} aria-hidden="true">
+      /
+    </span>
+    <LoginLink />
+  </div>
+);
+
+// JDM: the red "Sell Your Car, it's Free!" button at the end of the top bar
+const SellLink = () => (
+  <NamedLink name="NewListingPage" className={css.sellLink}>
+    <FormattedMessage id="TopbarDesktop.sellCta" />
+  </NamedLink>
+);
+
+const InboxIcon = () => (
+  <svg
+    className={css.inboxIcon}
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z" />
+    <path d="M8 9h8M8 12.5h5" />
+  </svg>
+);
+
+const InboxLink = ({ notificationCount, inboxTab, intl }) => {
   const notificationDot = notificationCount > 0 ? <div className={css.notificationDot} /> : null;
+  const label = intl.formatMessage({ id: 'TopbarDesktop.inbox' });
   return (
     <NamedLink
       id="inbox-link"
       className={css.topbarLink}
       name="InboxPage"
       params={{ tab: inboxTab }}
+      title={label}
     >
       <span className={css.topbarLinkLabel}>
-        <FormattedMessage id="TopbarDesktop.inbox" />
+        <InboxIcon />
+        <span className={css.visuallyHidden}>
+          {label}
+          {notificationCount > 0 ? (
+            <FormattedMessage
+              id="TopbarDesktop.unreadMessages"
+              values={{ count: notificationCount }}
+            />
+          ) : null}
+        </span>
         {notificationDot}
       </span>
     </NamedLink>
@@ -174,7 +222,7 @@ const TopbarDesktop = props => {
   const classes = classNames(rootClassName || css.root, className);
 
   const inboxLinkMaybe = authenticatedOnClientSide ? (
-    <InboxLink notificationCount={notificationCount} inboxTab={inboxTab} />
+    <InboxLink notificationCount={notificationCount} inboxTab={inboxTab} intl={intl} />
   ) : null;
 
   const profileMenuMaybe = authenticatedOnClientSide ? (
@@ -187,8 +235,8 @@ const TopbarDesktop = props => {
     />
   ) : null;
 
-  const signupLinkMaybe = isAuthenticatedOrJustHydrated ? null : <SignupLink />;
-  const loginLinkMaybe = isAuthenticatedOrJustHydrated ? null : <LoginLink />;
+  const authLinksMaybe = isAuthenticatedOrJustHydrated ? null : <AuthLinks />;
+  const sellLinkMaybe = showCreateListingsLinkHydrationSafe ? <SellLink /> : null;
 
   const searchFormMaybe = showSearchForm ? (
     <TopbarSearchForm
@@ -225,13 +273,13 @@ const TopbarDesktop = props => {
         customLinks={customLinks}
         intl={intl}
         hasClientSideContentReady={authenticatedOnClientSide || !isAuthenticatedOrJustHydrated}
-        showCreateListingsLink={showCreateListingsLinkHydrationSafe}
+        showCreateListingsLink={false}
       />
 
       {inboxLinkMaybe}
       {profileMenuMaybe}
-      {signupLinkMaybe}
-      {loginLinkMaybe}
+      {authLinksMaybe}
+      {sellLinkMaybe}
     </nav>
   );
 };

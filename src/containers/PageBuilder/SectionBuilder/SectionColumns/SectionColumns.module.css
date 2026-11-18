@@ -36,3 +36,17 @@
   padding-left: 0;
   padding-right: 0;
 }
+
+/* JDM: FAQ accordion container (see FAQ_SECTION_ID) */
+.faqContainer {
+  display: block;
+  max-width: var(--contentMaxWidthPages);
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+
+  @media (--viewportMedium) {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}

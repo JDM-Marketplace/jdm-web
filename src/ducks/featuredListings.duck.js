@@ -4,7 +4,8 @@ import { isForbiddenError, storableError } from '../util/errors';
 import { addMarketplaceEntities } from './marketplaceData.duck';
 import { createImageVariantConfig } from '../util/sdkLoader';
 
-const MAX_LISTING_COUNT = 10;
+// JDM: the landing page "Latest listings" grid shows 4 rows of 4
+const MAX_LISTING_COUNT = 16;
 
 // ================ HELPERS ==================== //
 

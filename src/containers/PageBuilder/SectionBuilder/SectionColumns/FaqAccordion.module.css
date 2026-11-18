@@ -1,0 +1,124 @@
+@import '../../../../styles/customMediaQueries.css';
+
+.root {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 880px;
+  overflow: hidden;
+  counter-reset: faq;
+  border: 1.5px solid var(--colorGrey700);
+  border-radius: 4px;
+  background-color: var(--colorWhite);
+}
+
+.item {
+  counter-increment: faq;
+  border-bottom: 1.5px solid var(--colorGrey700);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--colorGrey800, #1f1f1f);
+  text-align: start;
+
+  &::-webkit-details-marker,
+  &::marker {
+    display: none;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--marketplaceColor);
+    outline-offset: -2px;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--colorGrey50);
+    }
+  }
+
+  @media (--viewportMedium) {
+    padding: 12px 20px;
+  }
+}
+
+.questionText {
+  flex: 1;
+  min-width: 0;
+
+  /* The question is an h3 from Console; numbered like the design ("1. How to…") */
+  & h1,
+  & h2,
+  & h3,
+  & h4,
+  & p {
+    margin: 0;
+    padding: 0;
+    font-weight: var(--fontWeightMedium);
+    font-size: 15px;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: inherit;
+
+    &::before {
+      content: counter(faq) '. ';
+    }
+
+    @media (--viewportMedium) {
+      font-size: 16px;
+    }
+  }
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--colorGrey700);
+  transition: transform var(--transitionStyleButton);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.item[open] .chevron {
+  transform: rotate(90deg);
+}
+
+.answer {
+  padding: 0 16px 16px 16px;
+
+  @media (--viewportMedium) {
+    padding: 0 48px 20px 20px;
+  }
+
+  & p,
+  & li {
+    margin: 0;
+    padding: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--colorGrey700);
+    max-width: 68ch;
+  }
+
+  & p + p {
+    margin-top: 12px;
+  }
+}

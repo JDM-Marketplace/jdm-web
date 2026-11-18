@@ -218,3 +218,58 @@
     text-decoration: none;
   }
 }
+
+/* JDM: grid layout (see GRID_SECTION_IDS in SectionListings.js) */
+.gridContainer {
+  width: 100%;
+  max-width: var(--contentMaxWidthPages);
+  margin: 0 auto;
+  padding: 24px 24px 0 24px;
+
+  @media (--viewportMedium) {
+    padding: 32px 32px 0 32px;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  @media (--viewportLarge) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* Undo the carousel sizing: grid tracks size the cards */
+  & .listItem {
+    display: block;
+    min-width: 0;
+  }
+
+  & .listItem > *,
+  & .listItem:last-of-type > *,
+  & .card {
+    width: 100%;
+    margin: 0;
+    padding-right: 0;
+    transform: none;
+  }
+}
+
+.gridFooter {
+  display: flex;
+  justify-content: center;
+  padding: 32px 24px 0 24px;
+
+  @media (--viewportMedium) {
+    padding-top: 40px;
+  }
+}

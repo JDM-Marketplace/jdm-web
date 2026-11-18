@@ -6,7 +6,12 @@ import { pickFieldOptions } from '../../PageBuilder.helpers';
 import Field, { hasDataInFields } from '../../Field';
 
 import SectionContainer from '../SectionContainer';
+import HeroListingSearch from './HeroListingSearch';
 import css from './SectionHero.module.css';
+
+// JDM: the landing page hero (anchor ID "hero" in Console) also shows the Make / Model /
+// Location / Price search between the description and the call to action.
+const SEARCH_HERO_SECTION_ID = 'hero';
 
 /**
  * @typedef {Object} FieldComponentConfig
@@ -68,6 +73,7 @@ const SectionHero = props => {
         <header className={defaultClasses.sectionDetails}>
           <Field data={title} className={defaultClasses.title} options={fieldOptions} />
           <Field data={description} className={defaultClasses.description} options={fieldOptions} />
+          {sectionId === SEARCH_HERO_SECTION_ID ? <HeroListingSearch /> : null}
           <Field data={callToAction} className={defaultClasses.ctaButton} options={fieldOptions} />
         </header>
       ) : null}

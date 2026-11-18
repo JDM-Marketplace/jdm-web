@@ -1,6 +1,11 @@
+@import '../../styles/customMediaQueries.css';
+
 .layout {
   min-height: 100vh;
   grid-template-rows: auto 1fr auto;
+  /* A grid column grows to its widest child (e.g. the hero background photo), which made
+     the page wider than the window. minmax(0, 1fr) keeps it to the window width. */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .topbar {
@@ -11,6 +16,8 @@
 
 .main {
   display: grid;
+  /* Never let a wide child stretch the page sideways */
+  grid-template-columns: minmax(0, 1fr);
   scroll-margin-top: var(--topbarHeight);
   @media (--viewportMedium) {
     scroll-margin-top: var(--topbarHeightDesktop);
@@ -23,4 +30,638 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* =====================================================================
+   JDM landing page sections, styled by their anchor link IDs in Console
+   (Content > Pages > landing-page > section > Anchor link ID).
+   ===================================================================== */
+
+/* Hero: background photo with a white card holding the title, search and sell link */
+:global(#hero) {
+  min-height: 0;
+  align-items: stretch;
+
+  & > [class*='SectionContainer_sectionContent'] {
+    width: 100%;
+    padding: 24px 16px;
+
+    @media (--viewportMedium) {
+      padding: 48px 32px;
+    }
+
+    @media (--viewportLarge) {
+      padding: 72px 32px 96px 32px;
+    }
+  }
+
+  & header {
+    width: 100%;
+    max-width: calc(var(--contentMaxWidthPages) - 64px);
+    margin: 0 auto;
+    padding: 24px 20px;
+    justify-content: stretch;
+    background-color: var(--colorWhite);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgb(0 0 0 / 25%);
+
+    @media (--viewportMedium) {
+      padding: 32px;
+    }
+
+    & h1 {
+      justify-self: start;
+      max-width: 15ch;
+      margin: 0;
+      padding: 0;
+      text-align: start;
+      font-weight: var(--fontWeightBlack);
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--colorGrey900);
+      text-wrap: balance;
+
+      @media (--viewportMedium) {
+        font-size: 44px;
+      }
+    }
+
+    & h1 + p {
+      justify-self: start;
+      max-width: 40ch;
+      margin: 12px 0 24px 0;
+      text-align: start;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--colorGrey700);
+      text-wrap: pretty;
+    }
+
+    /* "Sell Your Car or Part for FREE" is a text link, not a button */
+    & > a {
+      justify-self: start;
+      margin: 20px 0 0 0;
+      padding: 4px 0;
+      border: 0;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+      color: var(--marketplaceColor);
+      font-weight: var(--fontWeightSemiBold);
+      font-size: 15px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+
+      &::after {
+        content: ' \2192';
+      }
+
+      &:hover {
+        background: none;
+        color: var(--marketplaceColorDark);
+      }
+    }
+  }
+}
+
+/* Latest listings: small h2 eyebrow over a large h3, grid of cards */
+:global(#latest-listings) {
+  & header {
+    width: 100%;
+    justify-content: start;
+    padding: 0 24px;
+
+    @media (--viewportMedium) {
+      padding: 0 32px;
+    }
+
+    & h2 {
+      justify-self: start;
+      margin: 0;
+      padding: 0;
+      text-align: start;
+      font-weight: var(--fontWeightSemiBold);
+      font-size: 15px;
+      line-height: 1.4;
+      letter-spacing: 0;
+      color: var(--colorGrey600);
+    }
+
+    & h2 + h3 {
+      justify-self: start;
+      margin: 4px 0 0 0;
+      padding: 0;
+      text-align: start;
+      font-weight: var(--fontWeightBlack);
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: var(--colorGrey900);
+
+      @media (--viewportMedium) {
+        font-size: 36px;
+      }
+    }
+  }
+
+  & footer a::after {
+    content: ' \2192';
+  }
+}
+
+/* No hidden fees: red band with the 3 listing steps and the checklist */
+:global(#no-hidden-fees) {
+  & [class*='SectionBuilder_blockContainer'] {
+    gap: 40px;
+
+    @media (--viewportLarge) {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 64px;
+      align-items: start;
+    }
+  }
+
+  & h2 {
+    max-width: 18ch;
+    margin: 0;
+    font-weight: var(--fontWeightBlack);
+    font-size: 26px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--colorWhite);
+    text-wrap: balance;
+
+    @media (--viewportMedium) {
+      font-size: 32px;
+    }
+  }
+
+  /* Steps: 1 -> 2 -> 3 */
+  & ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 32px 0 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+
+  & ol li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    counter-increment: step;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--colorWhite);
+
+    &::before {
+      content: counter(step);
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--colorWhite);
+      border-radius: 50%;
+      background-color: var(--marketplaceColor);
+      font-weight: var(--fontWeightBold);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    &:first-child::before {
+      background-color: var(--colorGrey900);
+      border-color: var(--colorGrey900);
+    }
+
+    /* Connector to the next step */
+    &:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 22px;
+      left: calc(50% + 30px);
+      width: calc(100% - 52px);
+      border-top: 2px solid var(--colorWhite);
+    }
+
+    &:nth-child(2)::after {
+      border-top-style: dashed;
+    }
+  }
+
+  & h3 {
+    margin: 0;
+    font-weight: var(--fontWeightBold);
+    font-size: 18px;
+    line-height: 1.3;
+    color: var(--colorWhite);
+  }
+
+  /* Checklist with an icon per item */
+  & ul {
+    display: grid;
+    gap: 10px;
+    margin: 16px 0 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  & ul li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--colorWhite);
+
+    &::before {
+      content: '';
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+      background-color: currentColor;
+      mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='12'%20cy='12'%20r='9'/%3E%3Cpath%20d='M8.5%2012.5l2.5%202.5%204.5-5'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+    }
+
+    &:nth-child(2)::before {
+      mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20x='4'%20y='5'%20width='16'%20height='15'%20rx='2'/%3E%3Cpath%20d='M8%203v4M16%203v4M4%2010h16'/%3E%3C/svg%3E");
+    }
+
+    &:nth-child(3)::before {
+      mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='9'%20cy='8'%20r='3'/%3E%3Cpath%20d='M3.5%2019a5.5%205.5%200%200%201%2011%200'/%3E%3Cpath%20d='M16%205.5a3%203%200%200%201%200%205.5M18%2019a5%205%200%200%200-3-4.6'/%3E%3C/svg%3E");
+    }
+
+    &:nth-child(4)::before {
+      mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='12'%20cy='12'%20r='9'/%3E%3Cpath%20d='M3%2012h18M12%203a14%2014%200%200%201%200%2018M12%203a14%2014%200%200%200%200%2018'/%3E%3C/svg%3E");
+    }
+  }
+
+  /* "Start selling today" as an outlined white button */
+  & [id='good-to-know'] a {
+    margin-top: 24px;
+    padding: 10px 18px;
+    border: 1.5px solid var(--colorWhite);
+    border-radius: 6px;
+    background-color: transparent;
+    box-shadow: none;
+    color: var(--colorWhite);
+    font-weight: var(--fontWeightSemiBold);
+
+    &::after {
+      content: ' \2192';
+    }
+
+    &:hover {
+      background-color: var(--colorWhite);
+      color: var(--marketplaceColor);
+    }
+
+    @media (--viewportLarge) {
+      justify-self: end;
+    }
+  }
+}
+
+/* Manufacturers: make links as outlined chips with an arrow */
+:global(#manufacturers) {
+  & header {
+    width: 100%;
+    justify-content: start;
+  }
+
+  & h2 {
+    justify-self: start;
+    margin: 0;
+    text-align: start;
+    font-weight: var(--fontWeightBlack);
+    font-size: 24px;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: var(--colorGrey900);
+
+    @media (--viewportMedium) {
+      font-size: 28px;
+    }
+  }
+
+  & [class*='SectionBuilder_blockContainer'] {
+    padding-top: 24px;
+  }
+
+  & ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  & li {
+    margin: 0;
+    padding: 0;
+  }
+
+  & li a {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1.5px solid var(--colorGrey900);
+    border-radius: 4px;
+    color: var(--colorGrey900);
+    font-weight: var(--fontWeightBold);
+    font-size: 15px;
+    text-decoration: none;
+    transition: background-color var(--transitionStyleButton), color var(--transitionStyleButton);
+
+    &::after {
+      content: '';
+      width: 16px;
+      height: 16px;
+      background-color: currentColor;
+      mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M5%2012h14M13%206l6%206-6%206'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: var(--colorGrey900);
+        color: var(--colorWhite);
+        text-decoration: none;
+      }
+    }
+  }
+}
+
+/* JDM Cars / JDM Parts: two big image cards, the whole card is the link */
+:global(#categories),
+:global(#faq) {
+  background-color: #fffdf8;
+}
+
+:global(#categories) {
+  & [class*='SectionBuilder_blockContainer'] {
+    gap: 16px;
+
+    @media (--viewportMedium) {
+      gap: 32px;
+    }
+  }
+
+  & [id='jdm-cars'],
+  & [id='jdm-parts'] {
+    position: relative;
+    overflow: hidden;
+    min-height: 240px;
+    border-radius: 8px;
+    background-color: var(--colorGrey800);
+    isolation: isolate;
+
+    @media (--viewportMedium) {
+      min-height: 340px;
+    }
+
+    /* Photo from the block media (Console), covering the card */
+    & [class*='BlockDefault_media'] {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      margin: 0;
+
+      & > *,
+      & img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 0;
+      }
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+    }
+
+    & [class*='BlockDefault_text'] {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      min-height: inherit;
+      padding: 20px;
+
+      @media (--viewportMedium) {
+        padding: 28px;
+      }
+    }
+
+    & h2 {
+      max-width: 6ch;
+      margin: 0;
+      font-weight: var(--fontWeightBlack);
+      font-size: 40px;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--colorWhite);
+
+      @media (--viewportMedium) {
+        font-size: 56px;
+      }
+    }
+
+    /* The CTA is an arrow button; its text stays for screen readers and the card is clickable */
+    & a {
+      align-self: flex-end;
+      /* Flex (not grid): the hidden CTA text must not take a row and push the arrow down */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      width: 44px;
+      height: 44px;
+      margin: 24px 0 0 0;
+      padding: 0;
+      border: 1.5px solid var(--colorWhite);
+      border-radius: 6px;
+      background-color: rgb(0 0 0 / 15%);
+      box-shadow: none;
+      color: transparent;
+      font-size: 0;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+
+      &::after {
+        content: '';
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        background-color: var(--colorWhite);
+        mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M5%2012h14M13%206l6%206-6%206'/%3E%3C/svg%3E")
+          center / contain no-repeat;
+      }
+
+      &:hover {
+        background-color: rgb(0 0 0 / 35%);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--colorWhite);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  & [id='jdm-cars']::before {
+    background: linear-gradient(180deg, rgb(196 12 12 / 55%), rgb(120 0 0 / 55%));
+  }
+
+  & [id='jdm-parts']::before {
+    background: linear-gradient(180deg, rgb(0 0 0 / 35%), rgb(0 0 0 / 55%));
+  }
+}
+
+/* FAQ heading (the accordion has its own styles) */
+:global(#faq) {
+  & [class*='SectionColumns_faqContainer'] {
+    padding-top: 24px;
+  }
+
+  & header {
+    width: 100%;
+    justify-content: start;
+  }
+
+  & h2 {
+    justify-self: start;
+    margin: 0;
+    text-align: start;
+    font-weight: var(--fontWeightBlack);
+    font-size: 22px;
+    line-height: 1.25;
+    color: var(--colorGrey900);
+  }
+}
+
+/* Feedback: grey band, text on the left and the outlined button on the right */
+:global(#feedback) {
+  & > [class*='SectionContainer_sectionContent'] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: var(--contentMaxWidthPages);
+    margin: 0 auto;
+    padding-left: 24px;
+    padding-right: 24px;
+    gap: 16px;
+
+    @media (--viewportMedium) {
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 48px;
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+  }
+
+  & header {
+    display: contents;
+  }
+
+  & h2 {
+    grid-column: 1;
+    justify-self: start;
+    max-width: 20ch;
+    margin: 0;
+    padding: 0;
+    text-align: start;
+    font-weight: var(--fontWeightBlack);
+    font-size: 24px;
+    line-height: 1.25;
+    color: var(--colorWhite);
+    text-wrap: balance;
+
+    @media (--viewportMedium) {
+      font-size: 28px;
+    }
+  }
+
+  & [class*='SectionBuilder_blockContainer'] {
+    grid-column: 1;
+    padding: 0;
+    margin: 0;
+    max-width: 52ch;
+
+    & p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.6;
+      color: rgb(255 255 255 / 92%);
+    }
+
+    & p + p {
+      margin-top: 12px;
+    }
+
+    & p:last-child {
+      text-align: end;
+    }
+  }
+
+  & header > a {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0 0 0;
+    padding: 12px 18px;
+    border: 1.5px solid var(--colorWhite);
+    border-radius: 6px;
+    background-color: transparent;
+    box-shadow: none;
+    color: var(--colorWhite);
+    font-weight: var(--fontWeightSemiBold);
+
+    &::after {
+      content: '';
+      width: 18px;
+      height: 18px;
+      background-color: currentColor;
+      mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20x='3'%20y='5'%20width='18'%20height='14'%20rx='2'/%3E%3Cpath%20d='M3%207l9%206%209-6'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+    }
+
+    &:hover {
+      background-color: var(--colorWhite);
+      color: var(--colorGrey900);
+    }
+
+    @media (--viewportMedium) {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: center;
+      margin: 0;
+    }
+  }
 }

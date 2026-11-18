@@ -307,3 +307,100 @@
     }
   }
 }
+
+/* =====================================================================
+   JDM top bar: logo, links next to it, then Sign up / Log in or the
+   inbox and profile menu, and the red "Sell Your Car" button at the end.
+   ===================================================================== */
+.root {
+  align-items: center;
+  padding: 0 24px 0 0;
+
+  /* The bar takes the page width; its links must never widen the page (the growing
+     links menu made every page with an "auto" layout column scroll sideways). */
+  contain: inline-size;
+  min-width: 0;
+
+  /* Line the logo and the button up with the page content on wide screens.
+     Uses vw, not %: a % padding grows with the bar and made every page scroll sideways. */
+  @media (--viewportLarge) {
+    padding: 0 max(24px, calc((100vw - var(--contentMaxWidthPages)) / 2));
+  }
+}
+
+/* No search bar on most pages: keep only a small gap after the logo */
+.spacer {
+  min-width: 16px;
+  width: 16px;
+  margin-right: 0;
+}
+
+.root > .spacer + * {
+  margin-right: auto;
+}
+
+.authLinks {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex-shrink: 0;
+
+  & .topbarLink {
+    padding: 0 6px;
+  }
+}
+
+.authSeparator {
+  color: var(--colorGrey500);
+  font-size: 14px;
+}
+
+.sellLink {
+  composes: buttonPrimary from global;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  min-height: 40px;
+  height: 40px;
+  margin: 0 0 0 16px;
+  padding: 0 18px;
+  font-size: 14px;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.inboxIcon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  /* Global svg styles would otherwise fill the outline icon */
+  fill: none;
+  stroke: currentColor;
+  color: var(--colorGrey700);
+}
+
+.topbarLink:hover .inboxIcon {
+  color: var(--colorBlack);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Search bar (search page only): narrower so the links and button keep the same edges
+   as on every other page */
+.searchLink {
+  min-width: 240px;
+}

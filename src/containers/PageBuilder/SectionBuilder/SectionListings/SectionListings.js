@@ -16,6 +16,10 @@ import SectionContainer from '../SectionContainer';
 
 import css from './SectionListings.module.css';
 
+// JDM: these listings sections (anchor IDs set in Console) show a grid of up to 16 listings
+// instead of the carousel, with the description as a sub-heading and the CTA below the grid.
+const GRID_SECTION_IDS = ['latest-listings'];
+
 const KEY_ARROW_LEFT = 'ArrowLeft';
 const KEY_ARROW_RIGHT = 'ArrowRight';
 const MAX_MOBILE_SCREEN_WIDTH = 768;
@@ -151,6 +155,7 @@ const ListingCarouselComponent = props => {
     error,
     allSections,
     isInsideContainer,
+    layout = 'carousel',
   } = props;
 
   const listingImageConfig = config.layout.listingImage;
@@ -190,7 +195,11 @@ const ListingCarouselComponent = props => {
   }
 
   return (
-    <ul className={getColumnCSS(numColumns, false)} ref={sliderRef} role="list">
+    <ul
+      className={layout === 'grid' ? css.grid : getColumnCSS(numColumns, false)}
+      ref={sliderRef}
+      role="list"
+    >
       {listings.map(listing => (
         <li key={listing.id.uuid} className={css.listItem}>
           <ListingCard
@@ -322,6 +331,58 @@ const SectionListings = props => {
   const hasHeaderFields = hasDataInFields([title, description, callToAction], fieldOptions);
   const darkMode = appearance?.textColor === 'white';
   const noListingsFound = fetched && listingEntities.length === 0;
+
+  if (GRID_SECTION_IDS.includes(sectionId)) {
+    // Description is shown as an h3 sub-heading under the h2 title (SEO request from the client)
+    const subHeading = description?.content ? { ...description, fieldType: 'heading3' } : null;
+    return (
+      <SectionContainer
+        id={sectionId}
+        className={className}
+        rootClassName={rootClassName}
+        appearance={appearance}
+        options={fieldOptions}
+      >
+        {hasDataInFields([title, subHeading], fieldOptions) ? (
+          <header className={defaultClasses.sectionDetails}>
+            <Field data={title} className={defaultClasses.title} options={fieldOptions} />
+            <Field
+              data={subHeading}
+              className={defaultClasses.description}
+              options={fieldOptions}
+            />
+          </header>
+        ) : null}
+        <div className={css.gridContainer}>
+          <ListingCarouselComponent
+            layout="grid"
+            numColumns={4}
+            listings={listingEntities}
+            sliderRef={sliderRef}
+            darkMode={darkMode}
+            onFetchFeaturedListings={onFetchFeaturedListings}
+            fetched={fetched}
+            inProgress={inProgress}
+            parentPage={parentPage}
+            sectionId={sectionId}
+            error={error}
+            config={config}
+            allSections={allSections}
+            isInsideContainer={isInsideContainer}
+          />
+        </div>
+        {hasDataInFields([callToAction], fieldOptions) && listingEntities.length > 0 ? (
+          <footer className={css.gridFooter}>
+            <Field
+              data={callToAction}
+              className={defaultClasses.ctaButton}
+              options={fieldOptions}
+            />
+          </footer>
+        ) : null}
+      </SectionContainer>
+    );
+  }
 
   const carouselHeight = calculateCarouselHeight(
     numColumns,

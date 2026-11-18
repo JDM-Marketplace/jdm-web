@@ -9,6 +9,7 @@ import { useIntl } from '../../util/reactIntl';
 import { requireListingImage } from '../../util/configHelpers';
 import { lazyLoadWithDimensions } from '../../util/uiHelpers';
 import { createSlug } from '../../util/urlHelpers';
+import { getJdmCardDetails } from '../../util/jdmFields';
 
 import {
   AspectRatioWrapper,
@@ -122,10 +123,18 @@ export const ListingCard = props => {
     authorName,
   } = translations;
 
-  const classes = classNames(rootClassName || css.root, className);
-
   const id = listing?.id?.uuid;
   const { title = '', publicData } = listing?.attributes || {};
+
+  // JDM listings (with a make) show "[Year] [Make] [Model]", the title, price and
+  // "[State] · [Odometer or Condition]", like the design.
+  const jdmDetails = getJdmCardDetails(publicData, config.listing?.listingFields, km =>
+    intl.formatMessage({ id: 'ListingCard.odometer' }, { km: intl.formatNumber(km) })
+  );
+
+  const classes = classNames(rootClassName || css.root, className, {
+    [css.jdmCard]: !!jdmDetails,
+  });
   const slug = createSlug(title);
 
   const { listingType, cardStyle } = publicData || {};
@@ -177,25 +186,52 @@ export const ListingCard = props => {
           setActivePropsMaybe={setActivePropsMaybe}
         />
       )}
-      <div className={css.info}>
-        {showPrice ? (
-          <div className={css.price} title={priceTooltip}>
-            {priceMessage}
-          </div>
-        ) : null}
-        <div className={css.mainInfo}>
-          {showListingImage && (
-            <div className={classNames(css.title, { [css.lightText]: darkMode })}>
-              {titleFormatted}
-            </div>
-          )}
-          {showAuthorInfo ? (
-            <div className={classNames(css.authorInfo, { [css.lightText]: darkMode })}>
-              {authorName}
+      {jdmDetails ? (
+        <div className={css.jdmInfo}>
+          <div className={css.jdmHeading}>{jdmDetails.heading}</div>
+          <div className={css.jdmTitle}>{titleFormatted}</div>
+          {showPrice ? (
+            <div className={css.jdmPrice} title={priceTooltip}>
+              {priceMessage}
             </div>
           ) : null}
+          {jdmDetails.meta.length > 0 ? (
+            <div className={css.jdmMeta}>
+              {jdmDetails.meta.map((item, i) => (
+                <React.Fragment key={item}>
+                  {i > 0 ? (
+                    <span className={css.jdmMetaSeparator} aria-hidden="true">
+                      ·
+                    </span>
+                  ) : null}
+                  <span>{item}</span>
+                </React.Fragment>
+              ))}
+            </div>
+          ) : null}
+          {showAuthorInfo ? <div className={css.jdmAuthor}>{authorName}</div> : null}
         </div>
-      </div>
+      ) : (
+        <div className={css.info}>
+          {showPrice ? (
+            <div className={css.price} title={priceTooltip}>
+              {priceMessage}
+            </div>
+          ) : null}
+          <div className={css.mainInfo}>
+            {showListingImage && (
+              <div className={classNames(css.title, { [css.lightText]: darkMode })}>
+                {titleFormatted}
+              </div>
+            )}
+            {showAuthorInfo ? (
+              <div className={classNames(css.authorInfo, { [css.lightText]: darkMode })}>
+                {authorName}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
     </NamedLink>
   );
 };
