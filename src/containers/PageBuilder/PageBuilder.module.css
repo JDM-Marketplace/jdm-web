@@ -798,3 +798,232 @@
     margin-right: auto;
   }
 }
+
+/* =====================================================================
+   Sell page (Content > Pages > sell), from the Miro "Sell Page" frame: a black
+   section with the intro and one card holding "About your listing" (with the
+   "Free to list" badge, the first paragraph) and "Before you post". Item icons
+   come from CSS, in list order. The FAQ reuses the landing page's #faq styles.
+   ===================================================================== */
+
+:global(#sell) {
+  & > [class*='SectionContainer_sectionContent'] {
+    box-sizing: border-box;
+    width: 100%;
+    /* 816px of content, the width of the FAQ below */
+    max-width: 864px;
+    margin: 0 auto;
+    padding: 48px 24px 56px 24px;
+
+    @media (--viewportMedium) {
+      padding: 72px 24px 88px 24px;
+    }
+  }
+
+  /* Miro: the heading is centred, the intro and the button start at the left */
+  & header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+  }
+
+  & h1 {
+    align-self: stretch;
+    max-width: none;
+    margin: 0;
+    font-weight: var(--fontWeightBlack);
+    font-size: 32px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-align: center;
+    color: var(--colorWhite);
+    text-wrap: balance;
+
+    @media (--viewportMedium) {
+      font-size: 44px;
+    }
+  }
+
+  & header p {
+    max-width: 64ch;
+    margin: 20px 0 0 0;
+    font-size: 16px;
+    line-height: 1.6;
+    text-align: left;
+    color: var(--colorGrey100);
+    text-wrap: pretty;
+  }
+
+  /* "Post a Listing →" */
+  & header a[class*='SectionBuilder_ctaButton'] {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    margin: 24px 0 0 0;
+    padding: 10px 24px;
+
+    &::after {
+      content: '→' / '';
+      font-size: 18px;
+      line-height: 1;
+    }
+  }
+
+  /* One dark card around both blocks */
+  & [class*='SectionBuilder_blockContainer'] {
+    display: flex;
+    flex-direction: column;
+    margin: 32px 0 0 0;
+    padding: 0;
+    border: 1px solid var(--colorGrey800);
+    border-radius: 12px;
+    background-color: var(--colorGrey900);
+    gap: 0;
+
+    @media (--viewportMedium) {
+      margin-top: 40px;
+    }
+  }
+
+  & [id='about-your-listing'],
+  & [id='before-you-post'] {
+    position: relative;
+    padding: 24px 20px;
+
+    @media (--viewportMedium) {
+      padding: 28px 32px;
+    }
+
+    & h2 {
+      margin: 0;
+      padding: 0;
+      font-weight: var(--fontWeightBold);
+      font-size: 20px;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+      color: var(--colorWhite);
+    }
+
+    & ul {
+      display: grid;
+      gap: 20px;
+      margin: 20px 0 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    & li {
+      position: relative;
+      margin: 0;
+      padding: 0 0 0 32px;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--colorGrey300);
+      text-wrap: pretty;
+
+      /* Icon, in the success green */
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 1px;
+        width: 20px;
+        height: 20px;
+        background-color: var(--colorSuccessLight);
+        -webkit-mask: var(--sellIcon) center / contain no-repeat;
+        mask: var(--sellIcon) center / contain no-repeat;
+      }
+    }
+
+    & strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 16px;
+      line-height: 1.4;
+      font-weight: var(--fontWeightSemiBold);
+      color: var(--colorWhite);
+    }
+
+    & a {
+      color: var(--colorWhite);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+
+  & [id='about-your-listing'] {
+    /* "Free to list" badge (the first paragraph) at the top right */
+    & h2 + p {
+      position: absolute;
+      top: 24px;
+      right: 20px;
+      margin: 0;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background-color: color-mix(in srgb, var(--colorSuccessLight) 16%, var(--colorGrey900));
+      font-size: 13px;
+      line-height: 1.6;
+      font-weight: var(--fontWeightSemiBold);
+      color: var(--colorSuccessLight);
+      white-space: nowrap;
+
+      @media (--viewportMedium) {
+        top: 30px;
+        right: 32px;
+      }
+    }
+
+    & h2 {
+      padding-right: 112px;
+    }
+
+    & ul {
+      @media (--viewportMedium) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 32px;
+      }
+    }
+
+    & li:nth-child(1) {
+      --sellIcon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+    }
+    & li:nth-child(2) {
+      --sellIcon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 22H4a2 2 0 0 1-2-2V6'/%3E%3Cpath d='m22 13-1.3-1.3a2.4 2.4 0 0 0-3.4 0L11 18'/%3E%3Ccircle cx='12' cy='8' r='2'/%3E%3Crect width='16' height='16' x='6' y='2' rx='2'/%3E%3C/svg%3E");
+    }
+    & li:nth-child(3) {
+      --sellIcon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.9 20A9 9 0 1 0 4 16.1L2 22Z'/%3E%3C/svg%3E");
+    }
+    & li:nth-child(4) {
+      --sellIcon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='16' x='2' y='4' rx='2'/%3E%3Cpath d='m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7'/%3E%3C/svg%3E");
+    }
+  }
+
+  & [id='before-you-post'] {
+    border-top: 1px solid var(--colorGrey800);
+
+    & li:nth-child(1) {
+      --sellIcon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E");
+    }
+    & li:nth-child(2) {
+      --sellIcon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.73 5.08A10.74 10.74 0 0 1 21.94 11.65a1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49'/%3E%3Cpath d='M14.08 14.16a3 3 0 0 1-4.24-4.24'/%3E%3Cpath d='M17.48 17.5A10.75 10.75 0 0 1 2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14'/%3E%3Cpath d='m2 2 20 20'/%3E%3C/svg%3E");
+    }
+    & li:nth-child(3) {
+      --sellIcon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/%3E%3Cpath d='M12 9v4M12 17h.01'/%3E%3C/svg%3E");
+    }
+  }
+}
+
+/* On this page the FAQ lines up with the card above it */
+:global(#sell) ~ :global(#faq) {
+  & > [class*='SectionContainer_sectionContent'] > * {
+    width: 100%;
+    max-width: 880px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
