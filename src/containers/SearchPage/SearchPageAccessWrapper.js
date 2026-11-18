@@ -1,5 +1,5 @@
-import React from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { Redirect, useHistory, useLocation } from 'react-router-dom';
 
 import { useConfiguration } from '../../context/configurationContext';
 import { useRouteConfiguration } from '../../context/routeConfigurationContext';
@@ -15,6 +15,7 @@ import {
   NO_ACCESS_PAGE_VIEW_LISTINGS,
 } from '../../util/urlHelpers';
 import { hasPermissionToViewData, isUserAuthorized } from '../../util/userHelpers';
+import { jdmSeoUrlForSearch } from '../../util/jdmSearchUrls';
 
 import { NamedRedirect } from '../../components';
 
@@ -31,8 +32,31 @@ const SearchPageAccessWrapper = ({ PageComponent, ...rest }) => {
   const config = useConfiguration();
   const routeConfiguration = useRouteConfiguration();
   const intl = useIntl();
-  const history = useHistory();
-  const location = useLocation();
+  const routerHistory = useHistory();
+  const routerLocation = useLocation();
+
+  // SEO search pages (JdmSeoSearchPage) pass their own /s location and a history that maps
+  // /s links to SEO URLs
+  const { jdmSeo } = rest;
+  const location = rest.location || routerLocation;
+  const history = useMemo(
+    () => (jdmSeo?.createHistory ? jdmSeo.createHistory(routerHistory) : routerHistory),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [routerHistory, !!jdmSeo]
+  );
+
+  // /s searches that have an SEO page (a category or a state) live at that page
+  const seoUrl =
+    !jdmSeo && location.pathname === '/s'
+      ? jdmSeoUrlForSearch(location.search, config.listing?.listingFields)
+      : null;
+  if (seoUrl) {
+    if (rest.staticContext) {
+      // Read by server/index.js: SEO redirects are permanent
+      rest.staticContext.status = 301;
+    }
+    return <Redirect to={seoUrl} />;
+  }
 
   const searchListingsError = rest.searchListingsError;
   if (isForbiddenError(searchListingsError)) {

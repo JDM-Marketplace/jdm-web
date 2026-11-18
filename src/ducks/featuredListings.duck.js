@@ -3,6 +3,7 @@ import * as log from '../util/log';
 import { isForbiddenError, storableError } from '../util/errors';
 import { addMarketplaceEntities } from './marketplaceData.duck';
 import { createImageVariantConfig } from '../util/sdkLoader';
+import { JDM_CARD_PUBLIC_DATA_FIELDS } from '../util/jdmFields';
 
 // JDM: the landing page "Latest listings" grid shows 4 rows of 4
 const MAX_LISTING_COUNT = 16;
@@ -68,6 +69,8 @@ const fetchFeaturedListingsPayloadCreator = async (arg, thunkAPI) => {
           'publicData.shippingEnabled',
           'publicData.priceVariationsEnabled',
           'publicData.priceVariants',
+          // JDM listing card: year, make, model, state, odometer / condition
+          ...JDM_CARD_PUBLIC_DATA_FIELDS,
         ],
         'fields.image': [
           'variants.listing-card',

@@ -226,6 +226,7 @@ export class SearchPageComponent extends Component {
       config,
       params: currentPathParams = {},
       currentUser,
+      jdmSeo,
     } = this.props;
 
     const {
@@ -317,8 +318,8 @@ export class SearchPageComponent extends Component {
     return (
       <Page
         scrollingDisabled={scrollingDisabled}
-        description={description}
-        title={title}
+        description={jdmSeo?.description || description}
+        title={jdmSeo?.title || title}
         schema={schema}
       >
         <TopbarContainer rootClassName={topbarClasses} currentSearchParams={validQueryParams} />
@@ -452,6 +453,7 @@ export class SearchPageComponent extends Component {
                   setActiveListing={onActivateListing}
                   isMapVariant
                   listingTypeParam={listingTypePathParam}
+                  getPageLink={jdmSeo?.getPageLink}
                   intl={intl}
                 />
               </div>

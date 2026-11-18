@@ -2,14 +2,34 @@
  * JDM listing field helpers shared by the ad form and the landing page search.
  *
  * The listing fields are configured in Console (Listings > Listing fields):
- * - make:  enum, e.g. "nissan"
- * - model: enum whose option ids start with the make id, e.g. "nissan-skyline"
- * - state: enum of Australian states, e.g. "nsw"
+ * - make:        enum (cars), e.g. "nissan", or "other" (Others)
+ * - part_make:   enum (parts), e.g. "nissan", "universal" or "other-parts"
+ * - model:       enum (cars) whose option ids start with the make id, e.g. "nissan-silvia".
+ *                Each make has "{make}-other-models" (Other Models)
+ * - make_other:  text (cars), the make typed in when the make is "other"
+ * - model_other: text (cars), the model typed in when the make is "other" or the model is
+ *                "{make}-other-models"
+ * - state:       enum of Australian states, e.g. "nsw", and "int" (Overseas)
  */
 
 export const MAKE_FIELD_KEY = 'make';
+export const PART_MAKE_FIELD_KEY = 'part_make';
 export const MODEL_FIELD_KEY = 'model';
+export const MAKE_OTHER_FIELD_KEY = 'make_other';
+export const MODEL_OTHER_FIELD_KEY = 'model_other';
 export const STATE_FIELD_KEY = 'state';
+
+export const OTHER_MAKE_ID = 'other';
+const OTHER_MODELS_SUFFIX = '-other-models';
+
+/** "nissan-other-models" is the Other Models option of a make. */
+export const isOtherModel = model => !!model && `${model}`.endsWith(OTHER_MODELS_SUFFIX);
+
+/** The typed-in make is asked when the make is Others. */
+export const needsMakeOther = make => make === OTHER_MAKE_ID;
+
+/** The typed-in model is asked when the make is Others (no model list) or the model is Other Models. */
+export const needsModelOther = (make, model) => needsMakeOther(make) || isOtherModel(model);
 
 /**
  * Find a listing field config by key.
@@ -30,24 +50,64 @@ export const findListingField = (listingFields = [], key) =>
  * @returns {Array<{option: string, label: string}>}
  */
 export const modelOptionsForMake = (enumOptions = [], make) => {
-  if (!make) {
+  // Others has no model list: the model is typed in (model_other)
+  if (!make || needsMakeOther(make)) {
     return [];
   }
   const forMake = enumOptions.filter(o => `${o.option}`.startsWith(`${make}-`));
   return forMake.length > 0 ? forMake : enumOptions;
 };
 
+/**
+ * Public data values for the "other" fields that the form doesn't show are cleared (null), so a
+ * listing changed from Others to Nissan doesn't keep its typed-in make. With the Others make,
+ * the model list isn't shown either.
+ *
+ * @param {Object} publicListingFields listing field values by key (not namespaced)
+ * @returns {Object}
+ */
+export const clearUnusedOtherFields = publicListingFields => {
+  const make = publicListingFields[MAKE_FIELD_KEY];
+  const model = publicListingFields[MODEL_FIELD_KEY];
+  const has = key => Object.prototype.hasOwnProperty.call(publicListingFields, key);
+  return {
+    ...publicListingFields,
+    ...(has(MODEL_FIELD_KEY) && needsMakeOther(make) ? { [MODEL_FIELD_KEY]: null } : {}),
+    ...(has(MAKE_OTHER_FIELD_KEY) && !needsMakeOther(make) ? { [MAKE_OTHER_FIELD_KEY]: null } : {}),
+    ...(has(MODEL_OTHER_FIELD_KEY) && !needsModelOther(make, model)
+      ? { [MODEL_OTHER_FIELD_KEY]: null }
+      : {}),
+  };
+};
+
 export const YEAR_FIELD_KEY = 'year';
 export const ODOMETER_FIELD_KEY = 'odometer';
 export const CONDITION_FIELD_KEY = 'condition';
+
+/**
+ * Public data the JDM listing card reads (getJdmCardDetails). Add these to the 'fields.listing'
+ * of every listing query whose results render a ListingCard (search page, featured listings).
+ */
+export const JDM_CARD_PUBLIC_DATA_FIELDS = [
+  MAKE_FIELD_KEY,
+  PART_MAKE_FIELD_KEY,
+  MODEL_FIELD_KEY,
+  MAKE_OTHER_FIELD_KEY,
+  MODEL_OTHER_FIELD_KEY,
+  YEAR_FIELD_KEY,
+  STATE_FIELD_KEY,
+  ODOMETER_FIELD_KEY,
+  CONDITION_FIELD_KEY,
+].map(key => `publicData.${key}`);
 
 const enumLabel = (listingFields, key, value) =>
   findListingField(listingFields, key)?.enumOptions?.find(o => `${o.option}` === `${value}`)?.label;
 
 /**
  * Details for the JDM listing card: "[Year] [Make] [Model]" and "[State] · [Odometer]" for cars,
- * "[Year] [Make]" and "[State] · [Condition]" for parts. Returns null for listings without a make
- * (e.g. listings created before the JDM fields existed), which keep the template card.
+ * "[Year] [Make]" and "[State] · [Condition]" for parts. With Others / Other Models, the make and
+ * model typed in by the seller are shown. Returns null for listings without a make (e.g. listings
+ * created before the JDM fields existed), which keep the template card.
  *
  * @param {Object} publicData listing public data
  * @param {Array<Object>} listingFields config.listing.listingFields
@@ -55,23 +115,32 @@ const enumLabel = (listingFields, key, value) =>
  * @returns {{ heading: string, meta: Array<string> } | null}
  */
 export const getJdmCardDetails = (publicData = {}, listingFields = [], formatOdometer) => {
-  const make = publicData[MAKE_FIELD_KEY];
-  if (!make) {
+  const carMake = publicData[MAKE_FIELD_KEY];
+  const partMake = publicData[PART_MAKE_FIELD_KEY];
+  if (!carMake && !partMake) {
     return null;
   }
   const year = publicData[YEAR_FIELD_KEY];
-  const model = publicData[MODEL_FIELD_KEY];
+  const model = carMake ? publicData[MODEL_FIELD_KEY] : null;
+  const makeOther = `${publicData[MAKE_OTHER_FIELD_KEY] || ''}`.trim();
+  const modelOther = `${publicData[MODEL_OTHER_FIELD_KEY] || ''}`.trim();
   const state = publicData[STATE_FIELD_KEY];
   const odometer = publicData[ODOMETER_FIELD_KEY];
   const condition = publicData[CONDITION_FIELD_KEY];
 
-  const heading = [
-    year,
-    enumLabel(listingFields, MAKE_FIELD_KEY, make) || make,
-    model ? enumLabel(listingFields, MODEL_FIELD_KEY, model) : null,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const makeLabel = carMake
+    ? needsMakeOther(carMake) && makeOther
+      ? makeOther
+      : enumLabel(listingFields, MAKE_FIELD_KEY, carMake) || carMake
+    : enumLabel(listingFields, PART_MAKE_FIELD_KEY, partMake) || partMake;
+  const modelLabel =
+    carMake && needsModelOther(carMake, model) && modelOther
+      ? modelOther
+      : model
+      ? enumLabel(listingFields, MODEL_FIELD_KEY, model)
+      : null;
+
+  const heading = [year, makeLabel, modelLabel].filter(Boolean).join(' ');
 
   const meta = [
     // State ids are the short codes (nsw, vic...), which fit the card better than full names

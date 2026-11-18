@@ -322,3 +322,78 @@
 .mapRoot {
   background-color: var(--colorGrey100);
 }
+
+/* JDM: the body is grey, the search page is white edge to edge (Miro) */
+.page {
+  background-color: var(--colorWhite);
+}
+
+/*
+ * JDM search page (Miro "Search Result Pages Template"): a white page with the filters and
+ * results centred in one 1188px column, filters 264px wide, no divider between them.
+ * These come last so they override the template's grid layout above.
+ */
+.layoutWrapperContainer {
+  background-color: var(--colorWhite);
+
+  @media (--viewportMedium) {
+    max-width: 1188px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 24px;
+    padding-right: 24px;
+    gap: 32px;
+  }
+
+  @media (--viewportLarge) {
+    gap: 40px;
+  }
+}
+
+.layoutWrapperFilterColumn {
+  @media (--viewportMedium) {
+    padding: 32px 0 0 0;
+    background-color: var(--colorWhite);
+  }
+  @media (--viewportLarge) {
+    padding: 32px 0 0 0;
+  }
+  @media (min-width: 1440px) {
+    padding: 32px 0 0 0;
+  }
+  @media (--viewportXLarge) {
+    padding: 32px 0 0 0;
+  }
+}
+
+.filterColumnContent {
+  @media (--viewportMedium) {
+    width: 232px;
+    padding: 0 0 48px 0;
+  }
+  @media (--viewportLarge) {
+    width: 264px;
+    padding: 0 0 48px 0;
+  }
+  @media (min-width: 1440px) {
+    padding: 0 0 48px 0;
+  }
+}
+
+.layoutWrapperMain {
+  min-width: 0;
+
+  @media (--viewportMedium) {
+    padding: 32px 0 0 0;
+    border-left: none;
+  }
+  @media (--viewportLarge) {
+    padding: 32px 0 0 0;
+  }
+  @media (min-width: 1440px) {
+    padding: 32px 0 0 0;
+  }
+  @media (--viewportXLarge) {
+    padding: 32px 0 0 0;
+  }
+}

@@ -46,6 +46,7 @@ const dataLoader = require('./dataLoader');
 const { generateCSPNonce, csp } = require('./csp');
 const sdkUtils = require('./api-util/sdk');
 const { getSDKProxy } = require('./api-util/sdkCacheProxy');
+const { redirectToTrailingSlash } = require('./services/seo');
 
 const buildPath = path.resolve(__dirname, '..', 'build');
 const dev = process.env.REACT_APP_ENV === 'development';
@@ -227,6 +228,9 @@ app.use(passport.initialize());
 // Server-side routes that do not render the application
 app.use('/api', apiRouter);
 
+// SEO search pages (/jdm-cars/honda) redirect to their trailing slash version (/jdm-cars/honda/)
+app.use(redirectToTrailingSlash);
+
 const noCacheHeaders = {
   'Cache-control': 'no-cache, no-store, must-revalidate',
 };
@@ -306,8 +310,9 @@ app.get('/{*splat}', async (req, res) => {
       } else if (context.forbidden) {
         res.status(403).send(html);
       } else if (context.url) {
-        // React Router injects the context.url if a redirect was rendered
-        res.redirect(context.url);
+        // React Router injects the context.url if a redirect was rendered.
+        // Pages set context.status = 301 for permanent redirects (e.g. /s?... to SEO search pages).
+        res.redirect(context.status === 301 ? 301 : 302, context.url);
       } else if (context.notfound) {
         // NotFoundPage component injects the context.notfound when a
         // 404 should be returned

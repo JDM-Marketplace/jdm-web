@@ -6,6 +6,7 @@ import { FormattedMessage } from '../../../../util/reactIntl';
 import { LISTING_STATE_DRAFT } from '../../../../util/types';
 import { LISTING_PAGE_PARAM_TYPE_NEW } from '../../../../util/urlHelpers';
 import { pickCategoryFields } from '../../../../util/fieldHelpers';
+import { clearUnusedOtherFields } from '../../../../util/jdmFields';
 import {
   displayDescription,
   displayPrice,
@@ -181,12 +182,9 @@ const EditListingAdPanel = props => {
       ...nestedCategories,
     };
     // Fields that don't belong to the selected listing type / category are saved as null.
-    const publicListingFields = pickListingFieldsData(
-      rest,
-      'public',
-      listingType,
-      nestedCategories,
-      listingFields
+    // The typed-in make / model are cleared when Others / Other Models isn't selected
+    const publicListingFields = clearUnusedOtherFields(
+      pickListingFieldsData(rest, 'public', listingType, nestedCategories, listingFields)
     );
     const privateListingFields = pickListingFieldsData(
       rest,

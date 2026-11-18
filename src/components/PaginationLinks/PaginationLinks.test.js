@@ -70,4 +70,25 @@ describe('PaginationLinks', () => {
     expect(screen.queryByTitle('PaginationLinks.next')).not.toBeInTheDocument();
     expect(tree.asFragment().firstChild).toMatchSnapshot();
   });
+  it('shows Back, "Page X of Y" and Next in compact mode', () => {
+    const pagination = { page: 2, perPage: 10, totalItems: 30, totalPages: 3 };
+    render(<PaginationLinks {...props(pagination)} compact aria-label="Pages" />);
+    expect(screen.getByRole('navigation', { name: 'Pages' })).toBeInTheDocument();
+    expect(screen.getByText('PaginationLinks.pageOf')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'PaginationLinks.back' })).toHaveAttribute(
+      'href',
+      '/s?page=1&param=foobar'
+    );
+    expect(screen.getByRole('link', { name: 'PaginationLinks.nextPage' })).toHaveAttribute(
+      'href',
+      '/s?page=3&param=foobar'
+    );
+  });
+
+  it('shows no Back link on the first page in compact mode', () => {
+    const pagination = { page: 1, perPage: 10, totalItems: 30, totalPages: 3 };
+    render(<PaginationLinks {...props(pagination)} compact />);
+    expect(screen.queryByRole('link', { name: 'PaginationLinks.back' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'PaginationLinks.nextPage' })).toBeInTheDocument();
+  });
 });

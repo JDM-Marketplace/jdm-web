@@ -9,6 +9,7 @@ import PreviewResolverPage from '../containers/PreviewResolverPage/PreviewResolv
 // Otherwise, components will import form container eventually and
 // at that point css bundling / imports will happen in wrong order.
 import { NamedRedirect } from '../components';
+import { CARS_CATEGORY_ID, PARTS_CATEGORY_ID, STATE_SEGMENTS } from '../util/jdmSearchUrls';
 
 const pageDataLoadingAPI = getPageDataLoadingAPI();
 
@@ -35,6 +36,7 @@ const ProfilePage = loadable(() => import(/* webpackChunkName: "ProfilePage" */ 
 const ProfileSettingsPage = loadable(() => import(/* webpackChunkName: "ProfileSettingsPage" */ '../containers/ProfileSettingsPage/ProfileSettingsPage'));
 const RequestQuotePage = loadable(() => import(/* webpackChunkName: "RequestQuotePage" */ '../containers/RequestQuotePage/RequestQuotePage'));
 const SearchPageWithMap = loadable(() => import(/* webpackChunkName: "SearchPageWithMap" */ /* webpackPrefetch: true */  '../containers/SearchPage/SearchPageWithMap'));
+const JdmSeoSearchPage = loadable(() => import(/* webpackChunkName: "JdmSeoSearchPage" */ '../containers/SearchPage/JdmSeoSearchPage'));
 const SearchPageWithGrid = loadable(() => import(/* webpackChunkName: "SearchPageWithGrid" */ /* webpackPrefetch: true */  '../containers/SearchPage/SearchPageWithGrid'));
 const StripePayoutPage = loadable(() => import(/* webpackChunkName: "StripePayoutPage" */ '../containers/StripePayoutPage/StripePayoutPage'));
 const TermsOfServicePage = loadable(() => import(/* webpackChunkName: "TermsOfServicePage" */ '../containers/TermsOfServicePage/TermsOfServicePage'));
@@ -51,6 +53,30 @@ export const ACCOUNT_SETTINGS_PAGES = [
   'PaymentMethodsPage',
   'ManageAccountPage'
 ];
+
+// SEO search pages from the client's URL sheet. One route per path depth, as optional path
+// segments don't work with both react-router (matching) and path-to-regexp v8 (compiling):
+//   /jdm-cars/:make/:model/:state/page-N, /jdm-parts/:partMake/:state/page-N and /{state}/page-N
+// JdmSeoSearchPage validates the segments and shows 404 for unknown ones.
+const JDM_SEO_ROOTS = [
+  { root: CARS_CATEGORY_ID, depth: 4 },
+  { root: PARTS_CATEGORY_ID, depth: 3 },
+  ...STATE_SEGMENTS.map(root => ({ root, depth: 1 })),
+];
+const JDM_SEO_PARAMS = ['s1', 's2', 's3', 's4'];
+
+const jdmSeoSearchRoutes = (SearchPage, routeProps) =>
+  JDM_SEO_ROOTS.flatMap(({ root, depth }) =>
+    Array.from({ length: depth + 1 }, (_, index) => ({
+      path: `/${root}${JDM_SEO_PARAMS.slice(0, index).map(p => `/:${p}`).join('')}`,
+      name: `JdmSeoSearchPage-${root}-${index}`,
+      isJdmSeoSearchPage: true,
+      component: JdmSeoSearchPage,
+      extraProps: { seoRoot: root, SearchPageComponent: SearchPage },
+      loadData: pageDataLoadingAPI.SearchPage.loadDataForJdmSeoPage(root),
+      ...routeProps,
+    }))
+  );
 
 // https://en.wikipedia.org/wiki/Universally_unique_identifier#Nil_UUID
 const draftId = '00000000-0000-0000-0000-000000000000';
@@ -111,6 +137,12 @@ const routeConfiguration = (layoutConfig, accessControlConfig) => {
         map: isSearchPageWithMap,
       },
     },
+    ...jdmSeoSearchRoutes(SearchPage, {
+      ...authForPrivateMarketplace,
+      prioritizeLibraryLoading: {
+        map: isSearchPageWithMap,
+      },
+    }),
     {
       path: '/l',
       name: 'ListingBasePage',

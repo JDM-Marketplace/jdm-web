@@ -1,4 +1,4 @@
-import { getJdmCardDetails, modelOptionsForMake } from './jdmFields';
+import { clearUnusedOtherFields, getJdmCardDetails, modelOptionsForMake } from './jdmFields';
 
 const listingFields = [
   {
@@ -40,7 +40,71 @@ describe('getJdmCardDetails', () => {
   });
 });
 
+describe('getJdmCardDetails with part make and typed-in names', () => {
+  const fields = [
+    ...listingFields,
+    { key: 'part_make', enumOptions: [{ option: 'universal', label: 'Universal' }] },
+  ];
+
+  it('uses the part make for parts', () => {
+    expect(getJdmCardDetails({ part_make: 'universal' }, fields).heading).toEqual('Universal');
+  });
+
+  it('uses the typed-in make and model for Others', () => {
+    const publicData = { year: 1995, make: 'other', make_other: 'Isuzu', model_other: 'Bighorn' };
+    expect(getJdmCardDetails(publicData, fields).heading).toEqual('1995 Isuzu Bighorn');
+  });
+
+  it('uses the typed-in model for Other Models', () => {
+    const publicData = { make: 'nissan', model: 'nissan-other-models', model_other: 'Leopard' };
+    expect(getJdmCardDetails(publicData, fields).heading).toEqual('Nissan Leopard');
+  });
+});
+
+describe('clearUnusedOtherFields', () => {
+  it('clears the typed-in names that the form does not show', () => {
+    const fields = {
+      make: 'nissan',
+      model: 'nissan-silvia',
+      make_other: 'Isuzu',
+      model_other: 'X',
+    };
+    expect(clearUnusedOtherFields(fields)).toEqual({
+      make: 'nissan',
+      model: 'nissan-silvia',
+      make_other: null,
+      model_other: null,
+    });
+  });
+
+  it('keeps them for Others and clears the model list value', () => {
+    const fields = { make: 'other', model: 'nissan-silvia', make_other: 'Isuzu', model_other: 'X' };
+    expect(clearUnusedOtherFields(fields)).toEqual({ ...fields, model: null });
+  });
+
+  it('keeps the typed-in model for Other Models', () => {
+    const fields = {
+      make: 'nissan',
+      model: 'nissan-other-models',
+      make_other: 'A',
+      model_other: 'X',
+    };
+    expect(clearUnusedOtherFields(fields)).toEqual({ ...fields, make_other: null });
+  });
+
+  it('leaves fields of other categories alone', () => {
+    expect(clearUnusedOtherFields({ part_make: 'universal', make: null })).toEqual({
+      part_make: 'universal',
+      make: null,
+    });
+  });
+});
+
 describe('modelOptionsForMake', () => {
+  it('has no model list for Others', () => {
+    expect(modelOptionsForMake(listingFields[1].enumOptions, 'other')).toEqual([]);
+  });
+
   it('filters models by the make prefix', () => {
     expect(modelOptionsForMake(listingFields[1].enumOptions, 'toyota')).toEqual([
       { option: 'toyota-supra', label: 'Supra' },

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import classNames from 'classnames';
 
 import { useIntl } from '../../util/reactIntl';
@@ -39,6 +40,33 @@ const getPageNumbersArray = (page, totalPages) => {
 };
 
 /**
+ * Link to one page: a named route with ?page=N, or the URL from `getPageLink` when the page
+ * builds its own page URLs (e.g. /jdm-cars/page-2/ on the SEO search pages).
+ */
+const PageLink = props => {
+  const {
+    page,
+    pageName,
+    pagePathParams,
+    pageSearchParams,
+    getPageLink,
+    ariaLabel,
+    ...rest
+  } = props;
+  return getPageLink ? (
+    <Link to={getPageLink(page, pageSearchParams)} aria-label={ariaLabel} {...rest} />
+  ) : (
+    <NamedLink
+      name={pageName}
+      params={pagePathParams}
+      to={{ search: stringify({ ...pageSearchParams, page }) }}
+      ariaLabel={ariaLabel}
+      {...rest}
+    />
+  );
+};
+
+/**
  * Component that renders "Previous page" and "Next page" pagination
  * links of the given page component with the given pagination
  * information.
@@ -53,6 +81,7 @@ const getPageNumbersArray = (page, totalPages) => {
  * @param {object} props.pagePathParams - The path parameters for the page route
  * @param {object} props.pageSearchParams - The search parameters for the page route
  * @param {propTypes.pagination} props.pagination - The pagination information
+ * @param {Function} [props.getPageLink] - (page, pageSearchParams) => URL, replaces the named route links
  * @returns {JSX.Element}
  */
 export const PaginationLinks = props => {
@@ -64,7 +93,11 @@ export const PaginationLinks = props => {
     pagePathParams = {},
     pageSearchParams = {},
     pagination,
+    getPageLink,
+    compact = false,
+    'aria-label': ariaLabel,
   } = props;
+  const linkProps = { pageName, pagePathParams, pageSearchParams, getPageLink };
   const classes = classNames(rootClassName || css.root, className);
 
   const { page, totalPages, paginationLimit, paginationUnsupported } = pagination;
@@ -76,21 +109,62 @@ export const PaginationLinks = props => {
     : totalPages;
   const prevPage = page > 1 ? page - 1 : null;
   const nextPage = page < pageCountLimit ? page + 1 : null;
-  const prevSearchParams = { ...pageSearchParams, page: prevPage };
-  const nextSearchParams = { ...pageSearchParams, page: nextPage };
+
+  // JDM search page (Miro): "‹ Back   Page 1 of 12   Next ›"
+  if (compact) {
+    const backContent = (
+      <>
+        <IconArrowHead direction="left" size="small" rootClassName={css.compactIcon} />
+        {intl.formatMessage({ id: 'PaginationLinks.back' })}
+      </>
+    );
+    const nextContent = (
+      <>
+        {intl.formatMessage({ id: 'PaginationLinks.nextPage' })}
+        <IconArrowHead direction="right" size="small" rootClassName={css.compactIcon} />
+      </>
+    );
+    return (
+      <nav className={classNames(css.compactRoot, className)} aria-label={ariaLabel}>
+        {prevPage ? (
+          <PageLink {...linkProps} page={prevPage} className={css.compactBack} rel="prev">
+            {backContent}
+          </PageLink>
+        ) : (
+          <span className={classNames(css.compactBack, css.compactDisabled)} aria-hidden="true">
+            {backContent}
+          </span>
+        )}
+        <span className={css.compactStatus}>
+          {intl.formatMessage(
+            { id: 'PaginationLinks.pageOf' },
+            { page, totalPages: pageCountLimit }
+          )}
+        </span>
+        {nextPage ? (
+          <PageLink {...linkProps} page={nextPage} className={css.compactNext} rel="next">
+            {nextContent}
+          </PageLink>
+        ) : (
+          <span className={classNames(css.compactNext, css.compactDisabled)} aria-hidden="true">
+            {nextContent}
+          </span>
+        )}
+      </nav>
+    );
+  }
 
   /* Arrow links: to previous page */
   const prevLinkEnabled = (
-    <NamedLink
+    <PageLink
+      {...linkProps}
+      page={prevPage}
       className={css.prev}
-      name={pageName}
-      params={pagePathParams}
-      to={{ search: stringify(prevSearchParams) }}
       title={intl.formatMessage({ id: 'PaginationLinks.previous' })}
       ariaLabel={intl.formatMessage({ id: 'PaginationLinks.previous' })}
     >
       <IconArrowHead direction="left" size="big" rootClassName={css.arrowIcon} />
-    </NamedLink>
+    </PageLink>
   );
 
   const prevLinkDisabled = (
@@ -105,16 +179,15 @@ export const PaginationLinks = props => {
 
   /* Arrow links: to next page */
   const nextLinkEnabled = (
-    <NamedLink
+    <PageLink
+      {...linkProps}
+      page={nextPage}
       className={css.next}
-      name={pageName}
-      params={pagePathParams}
-      to={{ search: stringify(nextSearchParams) }}
       title={intl.formatMessage({ id: 'PaginationLinks.next' })}
       ariaLabel={intl.formatMessage({ id: 'PaginationLinks.next' })}
     >
       <IconArrowHead direction="right" size="big" rootClassName={css.arrowIcon} />
-    </NamedLink>
+    </PageLink>
   );
 
   const nextLinkDisabled = (
@@ -134,16 +207,15 @@ export const PaginationLinks = props => {
     const pageClassNames = classNames(css.toPageLink, { [css.currentPage]: isCurrentPage });
     return typeof v === 'number' ? (
       <li key={v} className={css.pageNumberListItem}>
-        <NamedLink
+        <PageLink
+          {...linkProps}
+          page={v}
           className={pageClassNames}
-          name={pageName}
-          params={pagePathParams}
-          to={{ search: stringify({ ...pageSearchParams, page: v }) }}
           title={intl.formatMessage({ id: 'PaginationLinks.toPage' }, { page: v })}
           ariaLabel={intl.formatMessage({ id: 'PaginationLinks.toPage' }, { page: v })}
         >
           {v}
-        </NamedLink>
+        </PageLink>
       </li>
     ) : (
       <li

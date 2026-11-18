@@ -12,8 +12,14 @@ import {
 } from '../../util/dates';
 import { constructQueryParamName, isOriginInUse } from '../../util/search';
 import { hasPermissionToViewData, isUserAuthorized } from '../../util/userHelpers';
-import { parse } from '../../util/urlHelpers';
+import { parse, stringify } from '../../util/urlHelpers';
+import {
+  jdmSeoSearchParams,
+  jdmSeoSegmentsFromParams,
+  parseJdmSeoPath,
+} from '../../util/jdmSearchUrls';
 import { getReferralParams } from '../../util/webStorageHelpers';
+import { JDM_CARD_PUBLIC_DATA_FIELDS } from '../../util/jdmFields';
 
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 
@@ -449,6 +455,8 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
         'publicData.shippingEnabled',
         'publicData.priceVariationsEnabled',
         'publicData.priceVariants',
+        // JDM listing card: year, make, model, state, odometer / condition
+        ...JDM_CARD_PUBLIC_DATA_FIELDS,
       ],
       'fields.user': ['profile.displayName', 'profile.abbreviatedName'],
       'fields.image': [
@@ -465,4 +473,21 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
   });
 
   return dispatch(searchListingsCall);
+};
+
+/**
+ * loadData for the SEO search pages (/jdm-cars/nissan/, /jdm-parts/, /vic/...): the same search
+ * as /s with the path filters added. Unknown paths load nothing, as the page shows 404.
+ *
+ * @param {string} root first path segment: "jdm-cars", "jdm-parts" or a state id
+ * @returns {Function} loadData(params, search, config)
+ */
+export const loadDataForJdmSeoPage = root => (params, search, config) => dispatch => {
+  const listingFields = config.listing?.listingFields;
+  const parsed = parseJdmSeoPath(root, jdmSeoSegmentsFromParams(params), listingFields);
+  if (!parsed) {
+    return Promise.resolve();
+  }
+  const searchParams = jdmSeoSearchParams(parsed, search);
+  return dispatch(loadData({}, `?${stringify(searchParams)}`, config));
 };

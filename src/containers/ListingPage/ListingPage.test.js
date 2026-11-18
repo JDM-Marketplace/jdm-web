@@ -228,7 +228,7 @@ describe('ListingPage variants', () => {
     const listingRouteConfig = routeConfiguration.find(conf => conf.name === 'ListingPage');
     const ListingPage = listingRouteConfig.component;
 
-    const { getByPlaceholderText, getByRole, queryAllByRole, getByText } = render(
+    const { queryByPlaceholderText, getByRole, queryAllByRole, getByText } = render(
       <ListingPage {...props} />,
       {
         initialState,
@@ -238,9 +238,8 @@ describe('ListingPage variants', () => {
     );
 
     await waitFor(() => {
-      // Has main search in Topbar and it's a location search.
-      expect(getByPlaceholderText('TopbarSearchForm.placeholder')).toBeInTheDocument();
-      expect(screen.getByTestId('location-search')).toBeInTheDocument();
+      // JDM: no search bar in the Topbar
+      expect(queryByPlaceholderText('TopbarSearchForm.placeholder')).not.toBeInTheDocument();
 
       // Has hero (coverPhoto) section
       expect(screen.getByTestId('hero')).toBeInTheDocument();
@@ -284,7 +283,7 @@ describe('ListingPage variants', () => {
     const listingRouteConfig = routeConfiguration.find(conf => conf.name === 'ListingPage');
     const ListingPage = listingRouteConfig.component;
 
-    const { getByPlaceholderText, getByRole, queryAllByRole, getByText } = render(
+    const { queryByPlaceholderText, getByRole, queryAllByRole, getByText } = render(
       <ListingPage {...props} />,
       {
         initialState,
@@ -293,9 +292,8 @@ describe('ListingPage variants', () => {
       }
     );
     await waitFor(() => {
-      // Has main search in Topbar and it's a location search.
-      expect(getByPlaceholderText('TopbarSearchForm.placeholder')).toBeInTheDocument();
-      expect(screen.getByTestId('location-search')).toBeInTheDocument();
+      // JDM: no search bar in the Topbar
+      expect(queryByPlaceholderText('TopbarSearchForm.placeholder')).not.toBeInTheDocument();
 
       // Does not have hero (coverPhoto) section on carousel mode
       expect(screen.getByTestId('carousel')).toBeInTheDocument();

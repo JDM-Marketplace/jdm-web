@@ -57,11 +57,12 @@ export const priceFilter = {
   max: 1000,
   step: 5,
 };
-// // This is not in use by default.
-// export const keywordsFilter = {
-//   key: 'keywords',
-//   schemaType: 'keywords',
-// }
+// JDM: the keyword filter is the search page's "Quick search" (JdmSearchFilters). Console only
+// offers it with location search, and this marketplace uses keyword search, so it's set here.
+export const keywordsFilter = {
+  key: 'keywords',
+  schemaType: 'keywords',
+};
 
 export const sortConfig = {
   // Enable/disable the sorting control in the SearchPage

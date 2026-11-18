@@ -31,9 +31,6 @@ import { getCurrentUserTypeRoles, showCreateListingLinkForUser } from '../../../
 
 const MAX_MOBILE_SCREEN_WIDTH = 1024;
 
-const SEARCH_DISPLAY_ALWAYS = 'always';
-const SEARCH_DISPLAY_NOT_LANDING_PAGE = 'notLandingPage';
-const SEARCH_DISPLAY_ONLY_SEARCH_PAGE = 'onlySearchPage';
 const MOBILE_MENU_BUTTON_ID = 'mobileMenuButton';
 const MOBILE_SEARCH_BUTTON_ID = 'mobileSearchButton';
 
@@ -282,19 +279,10 @@ const TopbarComponent = props => {
 
   const classes = classNames(rootClassName || css.root, className);
 
-  const { display: searchFormDisplay = SEARCH_DISPLAY_ALWAYS } = config?.topbar?.searchBar || {};
-
-  // Search form is shown conditionally depending on configuration and
-  // the current page.
-  const showSearchOnAllPages = searchFormDisplay === SEARCH_DISPLAY_ALWAYS;
-  const showSearchOnSearchPage =
-    searchFormDisplay === SEARCH_DISPLAY_ONLY_SEARCH_PAGE &&
-    ['SearchPage', 'SearchPageWithListingType'].includes(resolvedCurrentPage);
-  const showSearchNotOnLandingPage =
-    searchFormDisplay === SEARCH_DISPLAY_NOT_LANDING_PAGE && resolvedCurrentPage !== 'LandingPage';
-
-  const showSearchForm =
-    showSearchOnAllPages || showSearchOnSearchPage || showSearchNotOnLandingPage;
+  // JDM Marketplace: the top bar has no search bar on any page, so it looks the same everywhere
+  // (Miro "Navigation Menu"). Searching happens in the landing page hero and in the search page's
+  // Quick search filter, so the Console setting (Content > Top bar > Search bar) is not used.
+  const showSearchForm = false;
 
   const mobileSearchButtonMaybe = showSearchForm ? (
     <Button

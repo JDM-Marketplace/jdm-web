@@ -13,6 +13,12 @@ import {
   findListingField,
   modelOptionsForMake,
 } from '../../../../util/jdmFields';
+import {
+  CARS_CATEGORY_ID,
+  CATEGORY_PARAM,
+  jdmSeoLocationFromSearchParams,
+  jdmSeoUrl,
+} from '../../../../util/jdmSearchUrls';
 
 import css from './HeroListingSearch.module.css';
 
@@ -76,12 +82,20 @@ const HeroListingSearch = () => {
     const priceFilterMax =
       config.search?.defaultFilters?.find(f => f.schemaType === 'price')?.max || 1000000;
     const searchParams = {
+      // Make and model are car fields
+      ...(make ? { [CATEGORY_PARAM]: CARS_CATEGORY_ID } : {}),
       ...(make ? { [`pub_${MAKE_FIELD_KEY}`]: make } : {}),
       ...(model ? { [`pub_${MODEL_FIELD_KEY}`]: model } : {}),
       ...(state ? { [`pub_${STATE_FIELD_KEY}`]: state } : {}),
       ...(range ? { price: `${range.min},${range.max ?? priceFilterMax}` } : {}),
     };
-    history.push(createResourceLocatorString('SearchPage', routeConfiguration, {}, searchParams));
+    // SEO page when there is one (/jdm-cars/nissan/silvia/, /vic/), otherwise /s
+    const seoLocation = jdmSeoLocationFromSearchParams(searchParams, listingFields);
+    history.push(
+      seoLocation
+        ? jdmSeoUrl(seoLocation)
+        : createResourceLocatorString('SearchPage', routeConfiguration, {}, searchParams)
+    );
   };
 
   const formatPrice = value =>

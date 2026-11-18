@@ -2,7 +2,6 @@ import React, { Component, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 
-import { FormattedMessage } from '../../util/reactIntl';
 import { parse } from '../../util/urlHelpers';
 import { makeGetListingsByIdSelector } from '../../ducks/marketplaceData.duck';
 import { manageDisableScrolling, isScrollingDisabled } from '../../ducks/ui.duck';
@@ -20,7 +19,7 @@ import {
   onSortBy,
 } from './SearchPage.shared';
 
-import FilterComponent from './FilterComponent';
+import JdmSearchFilters from './JdmSearchFilters/JdmSearchFilters';
 import MainPanelHeader from './MainPanelHeader/MainPanelHeader';
 import SearchFiltersMobile from './SearchFiltersMobile/SearchFiltersMobile';
 import SortBy from './SortBy/SortBy';
@@ -28,6 +27,7 @@ import SearchResultsPanel from './SearchResultsPanel/SearchResultsPanel';
 import NoSearchResultsMaybe from './NoSearchResultsMaybe/NoSearchResultsMaybe';
 import SearchPageAccessWrapper from './SearchPageAccessWrapper';
 import SearchErrors from './SearchErrors';
+import JdmSeoHeader, { breadcrumbListSchema } from './JdmSeoHeader/JdmSeoHeader';
 
 import css from './SearchPage.module.css';
 
@@ -143,6 +143,7 @@ export class SearchPageComponent extends Component {
       config,
       params: currentPathParams = {},
       currentUser,
+      jdmSeo,
     } = this.props;
 
     const {
@@ -206,51 +207,48 @@ export class SearchPageComponent extends Component {
       ? classNames(css.topbarBehindModal, css.topbar)
       : css.topbar;
 
+    // SEO search pages (/jdm-cars/nissan/...) have their own title, description and breadcrumbs
+    const pageTitle = jdmSeo?.title || title;
+    const pageDescription = jdmSeo?.description || description;
+    const pageSchema = jdmSeo
+      ? [schema, breadcrumbListSchema(jdmSeo.breadcrumbs, config.marketplaceRootURL)]
+      : schema;
+
     // N.B. openMobileMap button is sticky.
     // For some reason, stickyness doesn't work on Safari, if the element is <button>
     return (
       <Page
+        className={css.page}
         scrollingDisabled={scrollingDisabled}
-        description={description}
-        title={title}
-        schema={schema}
+        description={pageDescription}
+        title={pageTitle}
+        schema={pageSchema}
       >
         <TopbarContainer rootClassName={topbarClasses} currentSearchParams={validQueryParams} />
         <div className={css.layoutWrapperContainer}>
           <aside className={css.layoutWrapperFilterColumn} data-testid="filterColumnAside">
             <div className={css.filterColumnContent}>
-              {availableFilters.map(filterConfig => {
-                const key = `SearchFiltersDesktop.${filterConfig.scope || 'built-in'}.${
-                  filterConfig.key
-                }`;
-                const filterId = `SearchFiltersDesktop.${filterConfig.key.toLowerCase()}`;
-                return (
-                  <FilterComponent
-                    key={key}
-                    id={filterId}
-                    className={css.filter}
-                    config={filterConfig}
-                    containerId="SearchPageWithGrid_DesktopFilters"
-                    listingCategories={listingCategories}
-                    marketplaceCurrency={marketplaceCurrency}
-                    urlQueryParams={validQueryParams}
-                    initialValues={initialValues(this.props, this.state.currentQueryParams)}
-                    getHandleChangedValueFn={this.getHandleChangedValueFn}
-                    intl={intl}
-                    liveEdit
-                    showAsPopup={false}
-                    isDesktop
-                  />
-                );
-              })}
-              <button className={css.resetAllButton} onClick={e => this.handleResetAll(e)}>
-                <FormattedMessage id={'SearchFiltersMobile.resetAll'} />
-              </button>
+              {/* JDM side filters (Miro "Side Filter"): heading, Quick search, collapsible rows */}
+              <JdmSearchFilters
+                idPrefix="desktop"
+                filters={availableFilters}
+                containerId="SearchPageWithGrid_DesktopFilters"
+                listingCategories={listingCategories}
+                marketplaceCurrency={marketplaceCurrency}
+                urlQueryParams={validQueryParams}
+                initialValues={initialValues(this.props, this.state.currentQueryParams)}
+                getHandleChangedValueFn={this.getHandleChangedValueFn}
+                onResetAll={e => this.handleResetAll(e)}
+                onManageDisableScrolling={onManageDisableScrolling}
+              />
             </div>
           </aside>
 
           <div id="main-content" className={css.layoutWrapperMain} role="main">
             <div className={css.searchResultContainer}>
+              {jdmSeo ? (
+                <JdmSeoHeader heading={jdmSeo.heading} breadcrumbs={jdmSeo.breadcrumbs} />
+              ) : null}
               <SearchFiltersMobile
                 className={css.searchFiltersMobileList}
                 urlQueryParams={validQueryParams}
@@ -269,29 +267,18 @@ export class SearchPageComponent extends Component {
                 noResultsInfo={noResultsInfo}
                 location={location}
               >
-                {availableFilters.map(filterConfig => {
-                  const key = `SearchFiltersMobile.${filterConfig.scope || 'built-in'}.${
-                    filterConfig.key
-                  }`;
-                  const filterId = `SearchFiltersMobile.${filterConfig.key.toLowerCase()}`;
-
-                  return (
-                    <FilterComponent
-                      key={key}
-                      id={filterId}
-                      config={filterConfig}
-                      containerId="SearchPage_MobileFilters"
-                      listingCategories={listingCategories}
-                      marketplaceCurrency={marketplaceCurrency}
-                      urlQueryParams={validQueryParams}
-                      initialValues={initialValues(this.props, this.state.currentQueryParams)}
-                      getHandleChangedValueFn={this.getHandleChangedValueFn}
-                      intl={intl}
-                      liveEdit
-                      showAsPopup={false}
-                    />
-                  );
-                })}
+                {/* The modal has its own "Filters" heading and Clear all */}
+                <JdmSearchFilters
+                  idPrefix="mobile"
+                  filters={availableFilters}
+                  containerId="SearchPage_MobileFilters"
+                  listingCategories={listingCategories}
+                  marketplaceCurrency={marketplaceCurrency}
+                  urlQueryParams={validQueryParams}
+                  initialValues={initialValues(this.props, this.state.currentQueryParams)}
+                  getHandleChangedValueFn={this.getHandleChangedValueFn}
+                  onManageDisableScrolling={onManageDisableScrolling}
+                />
               </SearchFiltersMobile>
               <MainPanelHeader
                 className={css.mainPanel}
@@ -319,6 +306,7 @@ export class SearchPageComponent extends Component {
                   search={parse(location.search)}
                   isMapVariant={false}
                   listingTypeParam={listingTypePathParam}
+                  getPageLink={jdmSeo?.getPageLink}
                   intl={intl}
                 />
               </div>

@@ -1,0 +1,67 @@
+@import '../../../styles/customMediaQueries.css';
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0 8px 0;
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--colorGrey700);
+}
+
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+
+  & + &::before {
+    content: '›';
+    padding: 0 8px;
+    color: var(--colorGrey500);
+  }
+}
+
+.crumbLink {
+  color: var(--colorGrey700);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--marketplaceColor);
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
+/* Current page in red (Miro: "Home > For Sale") */
+.crumbCurrent {
+  font-weight: var(--fontWeightSemiBold);
+  color: var(--marketplaceColor);
+}
+
+.heading {
+  margin: 0;
+  padding: 0;
+  color: var(--colorGrey900);
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: var(--fontWeightBold);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+
+  @media (--viewportMedium) {
+    font-size: 28px;
+  }
+}

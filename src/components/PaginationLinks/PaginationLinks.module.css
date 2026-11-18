@@ -128,3 +128,57 @@
   /* Ellipsis is raised from baseline */
   line-height: 13px;
 }
+
+/* Compact pagination of the JDM search page: "‹ Back   Page 1 of 12   Next ›" */
+.compactRoot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.compactBack,
+.compactNext {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 4px;
+  font-size: 15px;
+  font-weight: var(--fontWeightSemiBold);
+  line-height: 1.4;
+  white-space: nowrap;
+  text-decoration: none;
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.compactBack {
+  color: var(--colorGrey700);
+}
+
+.compactNext {
+  color: var(--marketplaceColor);
+}
+
+.compactDisabled {
+  color: var(--colorGrey300);
+  pointer-events: none;
+}
+
+.compactIcon {
+  stroke: currentColor;
+  fill: currentColor;
+}
+
+.compactStatus {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--colorGrey700);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

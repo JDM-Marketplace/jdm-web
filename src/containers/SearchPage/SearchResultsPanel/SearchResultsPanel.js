@@ -18,6 +18,7 @@ import css from './SearchResultsPanel.module.css';
  * @param {Object} props.search - The search
  * @param {Function} props.setActiveListing - The function to handle the active listing
  * @param {boolean} [props.isMapVariant] - Whether the map variant is enabled
+ * @param {Function} [props.getPageLink] - (page, search) => URL for pagination links
  * @returns {JSX.Element}
  */
 const SearchResultsPanel = props => {
@@ -30,6 +31,7 @@ const SearchResultsPanel = props => {
     setActiveListing,
     isMapVariant = true,
     listingTypeParam,
+    getPageLink,
     intl,
   } = props;
   const classes = classNames(rootClassName || css.root, className);
@@ -43,6 +45,8 @@ const SearchResultsPanel = props => {
         pagePathParams={{ listingType: listingTypeParam }}
         pageSearchParams={search}
         pagination={pagination}
+        getPageLink={getPageLink}
+        compact
         aria-label={intl.formatMessage({ id: 'SearchResultsPanel.screenreader.pagination' })}
       />
     ) : null;
@@ -59,15 +63,12 @@ const SearchResultsPanel = props => {
         `${panelLargeWidth / 3}vw`,
       ].join(', ');
     } else {
-      // Panel width relative to the viewport
-      const panelMediumWidth = 50;
-      const panelLargeWidth = 62.5;
+      // JDM: two columns next to the filters, in a page of at most 1188px (SearchPage.module.css)
       return [
         '(max-width: 549px) 100vw',
         '(max-width: 767px) 50vw',
-        `(max-width: 1439px) 26vw`,
-        `(max-width: 1920px) 18vw`,
-        `14vw`,
+        '(max-width: 1187px) 34vw',
+        '420px',
       ].join(', ');
     }
   };

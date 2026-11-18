@@ -13,7 +13,17 @@ import { isUploadImageOverLimitError } from '../../../../util/errors';
 import { formatMoney } from '../../../../util/currency';
 import { types as sdkTypes } from '../../../../util/sdkLoader';
 import * as validators from '../../../../util/validators';
-import { modelOptionsForMake } from '../../../../util/jdmFields';
+import {
+  MAKE_FIELD_KEY,
+  MAKE_OTHER_FIELD_KEY,
+  MODEL_FIELD_KEY,
+  MODEL_OTHER_FIELD_KEY,
+  PART_MAKE_FIELD_KEY,
+  YEAR_FIELD_KEY,
+  modelOptionsForMake,
+  needsMakeOther,
+  needsModelOther,
+} from '../../../../util/jdmFields';
 
 // Import shared components
 import {
@@ -35,17 +45,18 @@ const { Money } = sdkTypes;
 
 export const TITLE_MAX_LENGTH = 100;
 export const DESCRIPTION_MAX_LENGTH = 400;
-const YEAR_FIELD_KEY = 'year';
-const MAKE_FIELD_KEY = 'make';
-const MODEL_FIELD_KEY = 'model';
+const OTHER_TEXT_MAX_LENGTH = 50;
 
 // Where known listing fields go in the 3-column layout of the design.
 // Fields that are not listed here (e.g. new fields added in Console later)
 // are rendered in their own row after these, so nothing is ever hidden.
-const VEHICLE_ROW = [MAKE_FIELD_KEY, MODEL_FIELD_KEY, YEAR_FIELD_KEY];
+// Make is for cars and part make for parts, so only one of them is shown.
+const VEHICLE_ROW = [MAKE_FIELD_KEY, PART_MAKE_FIELD_KEY, MODEL_FIELD_KEY, YEAR_FIELD_KEY];
+// Typed in when the make is Others or the model is Other Models
+const OTHER_VEHICLE_ROW = [MAKE_OTHER_FIELD_KEY, MODEL_OTHER_FIELD_KEY];
 const LISTING_ROW = ['price', 'state', 'odometer', 'condition'];
 const SPECS_ROW = ['body_type', 'drive_type', 'transmission'];
-const PLACED_FIELD_KEYS = [...VEHICLE_ROW, ...LISTING_ROW, ...SPECS_ROW];
+const PLACED_FIELD_KEYS = [...VEHICLE_ROW, ...OTHER_VEHICLE_ROW, ...LISTING_ROW, ...SPECS_ROW];
 
 const messageOrNull = (intl, id, values) =>
   intl.messages?.[id] ? intl.formatMessage({ id }, values) : null;
@@ -299,13 +310,54 @@ const FieldYear = props => {
   );
 };
 
+// Make or model typed in by the seller (Others / Other Models). Optional in Console, as only some
+// cars need it, but required whenever the form shows it.
+const FieldOtherText = props => {
+  const { fieldConfig, name, formId, intl } = props;
+  const { key } = fieldConfig;
+  const label = fieldConfig.saveConfig?.label || fieldConfig.label;
+  return (
+    <FieldTextInput
+      id={`${formId}.${name}`}
+      name={name}
+      className={css.field}
+      type="text"
+      label={label}
+      placeholder={intl.formatMessage({ id: `EditListingAdForm.${key}Placeholder` })}
+      maxLength={OTHER_TEXT_MAX_LENGTH}
+      validate={validators.composeValidators(
+        validators.required(intl.formatMessage({ id: `EditListingAdForm.${key}Required` })),
+        validators.maxLength(
+          intl.formatMessage(
+            { id: 'EditListingAdForm.maxLength' },
+            { maxLength: OTHER_TEXT_MAX_LENGTH }
+          ),
+          OTHER_TEXT_MAX_LENGTH
+        )
+      )}
+    />
+  );
+};
+
 const ListingField = props => {
   const { fieldConfig, values, formId, intl } = props;
   const name = namespacedKey(fieldConfig);
   const { key, schemaType } = fieldConfig;
+  const make = values[`pub_${MAKE_FIELD_KEY}`];
+  const model = values[`pub_${MODEL_FIELD_KEY}`];
 
+  if (key === MAKE_OTHER_FIELD_KEY || key === MODEL_OTHER_FIELD_KEY) {
+    const isShown =
+      key === MAKE_OTHER_FIELD_KEY ? needsMakeOther(make) : needsModelOther(make, model);
+    return isShown ? (
+      <FieldOtherText fieldConfig={fieldConfig} name={name} formId={formId} intl={intl} />
+    ) : null;
+  }
   if (key === MODEL_FIELD_KEY) {
-    const make = values[`pub_${MAKE_FIELD_KEY}`];
+    // Others has no model list: the model is typed in instead
+    if (needsMakeOther(make)) {
+      return null;
+    }
     return (
       <FieldModel fieldConfig={fieldConfig} name={name} make={make} formId={formId} intl={intl} />
     );
@@ -663,6 +715,7 @@ const EditListingAdForm = props => {
                   <ModelResetOnMakeChange make={values[`pub_${MAKE_FIELD_KEY}`]} form={form} />
                 ) : null}
                 <FieldRow>{VEHICLE_ROW.map(renderField)}</FieldRow>
+                <FieldRow>{OTHER_VEHICLE_ROW.map(renderField)}</FieldRow>
 
                 <FieldTextInput
                   id={`${formId}.title`}

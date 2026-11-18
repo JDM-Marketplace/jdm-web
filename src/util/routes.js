@@ -2,6 +2,7 @@ import { matchPath } from 'react-router-dom';
 import { compile } from 'path-to-regexp';
 // NOTE: This file imports urlHelpers.js, which may lead to circular dependency
 import { stringify } from './urlHelpers';
+import { jdmSeoCanonicalPath } from './jdmSearchUrls';
 
 const findRouteByName = (nameToFind, routes) => routes.find(route => route.name === nameToFind);
 
@@ -14,7 +15,9 @@ const toPathByRouteName = (nameToFind, routes) => {
   if (!route) {
     throw new Error(`Path "${nameToFind}" was not found.`);
   }
-  return compile(route.path);
+  const toPath = compile(route.path);
+  // SEO search pages always end with a slash (/jdm-cars/nissan/), see util/jdmSearchUrls.js
+  return route.isJdmSeoSearchPage ? params => `${toPath(params)}/` : toPath;
 };
 
 /**
@@ -120,6 +123,17 @@ export const canonicalRoutePath = (routes, location, pathOnly = false) => {
     }
     const canonicalListingPathname = `/${parts[1]}/${parts[3]}`;
     return pathOnly ? canonicalListingPathname : `${canonicalListingPathname}${search}${hash}`;
+  }
+
+  // Client's canonicalisation rule: filtered URLs of the landing page and the SEO search pages
+  // (/jdm-cars/honda/civic/?filter) are canonicalised to the page without the filters
+  const isLandingPage = matches.length === 1 && matches[0].route.name === 'LandingPage';
+  if (isLandingPage) {
+    return '/';
+  }
+  const isJdmSeoSearchPage = matches.length === 1 && matches[0].route.isJdmSeoSearchPage;
+  if (isJdmSeoSearchPage) {
+    return jdmSeoCanonicalPath(pathname, search);
   }
 
   return pathOnly ? pathname : `${pathname}${search}${hash}`;

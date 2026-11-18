@@ -624,15 +624,14 @@ export const getDerivedRenderData = ({
 
   const validQueryParams = urlQueryParams;
 
-  const isKeywordSearch = isMainSearchTypeKeywords(config);
   const builtInPrimaryFilters = defaultFiltersConfig.filter(f =>
     ['categoryLevel', 'listingType'].includes(f.key)
   );
-  const builtInFilters = isKeywordSearch
-    ? defaultFiltersConfig.filter(
-        f => !['keywords', 'categoryLevel', 'listingType'].includes(f.key)
-      )
-    : defaultFiltersConfig.filter(f => !['categoryLevel', 'listingType'].includes(f.key));
+  // JDM: the top bar has no search bar, so the keyword filter is shown in the side filters as
+  // Quick search even with keyword main search (enabled in Console > Listing search)
+  const builtInFilters = defaultFiltersConfig.filter(
+    f => !['categoryLevel', 'listingType'].includes(f.key)
+  );
   const [customPrimaryFilters, customSecondaryFilters] = groupListingFieldConfigs(
     listingFieldsConfig,
     activeListingTypes
@@ -653,9 +652,7 @@ export const getDerivedRenderData = ({
 
   const selectedFilters = validQueryParams;
   const keysOfSelectedFilters = Object.keys(selectedFilters);
-  const selectedFiltersCountForMobile = isKeywordSearch
-    ? keysOfSelectedFilters.filter(f => f !== 'keywords').length
-    : keysOfSelectedFilters.length;
+  const selectedFiltersCountForMobile = keysOfSelectedFilters.length;
   const isValidDatesFilter =
     searchParamsInURL.dates == null ||
     (searchParamsInURL.dates != null && searchParamsInURL.dates === selectedFilters.dates);
@@ -835,7 +832,13 @@ export const createFilterValueChangeHandler = (
       const { address, bounds, keywords } = urlQueryParams;
       const mergedQueryParams = { ...urlQueryParams, ...prevState.currentQueryParams };
 
-      const keywordsMaybe = isMainSearchTypeKeywords(config) ? { keywords } : {};
+      // Keep the keywords of the main search, unless Quick search (JdmSearchFilters) changes them
+      const isKeywordsUpdate = Object.prototype.hasOwnProperty.call(
+        updatedURLParams || {},
+        'keywords'
+      );
+      const keywordsMaybe =
+        isMainSearchTypeKeywords(config) && !isKeywordsUpdate ? { keywords } : {};
 
       const datesAndSeatsMaybe = getDatesAndSeatsMaybe(mergedQueryParams, updatedURLParams);
 

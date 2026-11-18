@@ -70,6 +70,7 @@ const moveFocusToNextFocusableElement = (formId, direction = 'next') => {
  * @param {React.Node} props.children - The children
  * @param {Object} [props.initialValues] - The initial values
  * @param {boolean} [props.keepDirtyOnReinitialize] - Whether to keep dirty on reinitialize
+ * @param {boolean} [props.hideHeader] - Hide the label and toggle and keep the filter open
  * @param {intlShape} props.intl - The intl object
  * @returns {JSX.Element}
  */
@@ -129,10 +130,13 @@ class FilterPlainComponent extends Component {
       keepDirtyOnReinitialize = false,
       ariaLabel,
       containerId, // Note: this could be used to identify different filter containers
+      // JDM search filters (JdmSearchFilters) show the label in their own collapsible row
+      hideHeader = false,
     } = this.props;
     const formId = `${id}.form`;
     const classes = classNames(rootClassName || css.root, className);
-    const inertMaybe = this.state.isOpen ? {} : { inert: '' };
+    const isOpen = hideHeader || this.state.isOpen;
+    const inertMaybe = isOpen ? {} : { inert: '' };
     const isInput = element => element?.tagName?.toLowerCase() === 'input';
 
     return (
@@ -240,7 +244,7 @@ class FilterPlainComponent extends Component {
           },
         }}
       >
-        <div className={css.filterHeader}>
+        <div className={css.filterHeader} hidden={hideHeader}>
           <button
             id={`${id}.toggle`}
             className={css.labelButton}
@@ -267,7 +271,7 @@ class FilterPlainComponent extends Component {
         </div>
         <div
           id={id}
-          className={classNames(plainClassName, css.plain, { [css.isOpen]: this.state.isOpen })}
+          className={classNames(plainClassName, css.plain, { [css.isOpen]: isOpen })}
           ref={node => {
             this.filterContent = node;
           }}

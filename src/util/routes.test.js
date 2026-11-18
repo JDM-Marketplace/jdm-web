@@ -4,6 +4,8 @@ import {
   findRouteByRouteName,
   canonicalRoutePath,
   replaceParamsInHref,
+  matchPathname,
+  pathByRouteName,
 } from './routes';
 
 const layoutConfig = {
@@ -74,11 +76,26 @@ describe('util/routes.js', () => {
   describe('canonicalRoutePath', () => {
     it('handles non-listing route', () => {
       const location = {
-        pathname: '/',
+        pathname: '/s',
         search: '?some=value',
         hash: '#and-some-hash',
       };
-      expect(canonicalRoutePath(routes, location)).toEqual('/?some=value#and-some-hash');
+      expect(canonicalRoutePath(routes, location)).toEqual('/s?some=value#and-some-hash');
+    });
+    it('drops the query string of LandingPage', () => {
+      const location = { pathname: '/', search: '?some=value', hash: '#and-some-hash' };
+      expect(canonicalRoutePath(routes, location)).toEqual('/');
+    });
+    it('keeps the trailing slash of JDM SEO search page paths', () => {
+      const location = { pathname: '/jdm-cars/nissan/', search: '', hash: '' };
+      const [{ route, params }] = matchPathname(location.pathname, routes);
+      expect(pathByRouteName(route.name, routes, params)).toEqual('/jdm-cars/nissan/');
+    });
+    it('canonicalises filtered JDM SEO search pages to the page without filters', () => {
+      const filtered = { pathname: '/jdm-cars/honda/civic/', search: '?pub_x=1', hash: '' };
+      expect(canonicalRoutePath(routes, filtered)).toEqual('/jdm-cars/honda/civic/');
+      const paged = { pathname: '/vic/page-2/', search: '', hash: '' };
+      expect(canonicalRoutePath(routes, paged)).toEqual('/vic/page-2/');
     });
     it('handles ListingPage', () => {
       const location = {
